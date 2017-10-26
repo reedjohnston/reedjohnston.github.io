@@ -1,4 +1,3 @@
-<!doctype html>
 <html>
 
 <body>
@@ -10,6 +9,7 @@
 <a href="https://reedjohnston.github.io/wheelie.html">Stachedash</a>
 <br>
 <a href="https://reedjohnston.github.io/stachedash2017.html">Stachedash2017</a>
+<br>
 <br>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/w0xL-0lwNUs" frameborder="0" allowfullscreen></iframe>
 <br>
