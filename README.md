@@ -4,7 +4,7 @@
 
 <h1>Mistakes U</h1>
 <br>
-<a href="https://docs.google.com/spreadsheets/d/1eJHc7WZ1w7PGDK_NC55cHmGIUovPnzvhrnY-Rjwy4nk/edit?usp=sharing" target="_blank" class="Mobile-overlay-nav-item"> Voice Crack Inventory </a>
+<a href="https://docs.google.com/spreadsheets/d/1GLH-k0DkKqYXvwVMoYzwxCB9S3JhqkAEfc9MLMHKHAc/edit#gid=0" target="_blank" class="Mobile-overlay-nav-item"> Los Angeles Dodgers </a>
 <br>
 <a href="https://reedjohnston.github.io/wheelie.html">NOT Stache dash</a>
 <br>
