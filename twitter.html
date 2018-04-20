@@ -1,1 +1,30 @@
-<a class="twitter-timeline" href="https://twitter.com/gotheem48/lists/giants?ref_src=twsrc%5Etfw">A Twitter List by gotheem48</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<!DOCTYPE html>
+<html>
+<body>
+<br>
+<h1>Squares until All-Star Break<h1>
+<p>
+<button type="button" onclick="light(2)">Dan</button>
+<button type="button" onclick="light(1)">Brandon</button>
+<button type="button" onclick="light(0)">Emily</button>
+</p>
+<script>
+function light(sw) {
+    var pic;
+    if (sw == 1) {
+        pic = "files/Brandon.png"  
+   } else if (sw == 2) {
+        pic = "files/Dan.png" } 
+   } else {
+        pic = "files/Emily.png"
+    }
+    document.getElementById('myImage').src = pic;
+}
+</script>
+
+<img id="myImage" src="files/Squares.png" width="900" height="600">
+
+
+
+</body>
+</html> 
