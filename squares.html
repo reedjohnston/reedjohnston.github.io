@@ -3,7 +3,20 @@
 <body>
 <br>
 <h1>Squares until All-Star Break<h1>
-<p>
+<p>   
+<button type="button" onclick="light(14)">Ray</button>     
+<button type="button" onclick="light(13)">PJ</button>     
+<button type="button" onclick="light(12)">The Kev</button>    
+<button type="button" onclick="light(11)">Justin</button>    
+<button type="button" onclick="light(10)">Julianna</button>    
+<button type="button" onclick="light(9)">Jay</button>    
+<button type="button" onclick="light(8)">Jared</button>
+<button type="button" onclick="light(7)">Ernie Sr</button>
+<button type="button" onclick="light(6)">Ernie</button>    
+<button type="button" onclick="light(5)">Doug</button>
+<button type="button" onclick="light(4)">REed</button>
+<button type="button" onclick="light(3)">Sita</button>
+<button type="button" onclick="light(2)">Dan</button>
 <button type="button" onclick="light(1)">Brandon</button>
 <button type="button" onclick="light(0)">Emily</button>
 </p>
@@ -12,9 +25,48 @@ function light(sw) {
     var pic;
     if (sw == 1) {
         pic = "files/Brandon.png"  
-    } else {
+   }  
+   else if (sw == 2) {
+        pic = "files/Dan.png" 
+   }  
+   else if (sw == 3) {
+        pic = "files/Sita .png" 
+   }  
+   else if (sw == 4) {
+        pic = "files/Reed.png" 
+   }  
+   else if (sw == 5) {
+        pic = "files/Doug.png"
+   }  
+   else if (sw == 6) {
+        pic = "files/Ernie.png"
+   }  
+   else if (sw == 7) {
+        pic = "files/Erniesr.png"  
+   }  
+   else if (sw == 8) {
+        pic = "files/Jared.png" 
+   }  
+   else if (sw == 9) {
+        pic = "files/Jay.png"   
+   }  
+   else if (sw == 10) {
+        pic = "files/Julianna.png"     
+   }  
+   else if (sw == 11) {
+        pic = "files/Justin.png"  
+   }  
+   else if (sw == 12) {
+        pic = "files/Kevin.png"  
+   }  
+   else if (sw == 13) {
+        pic = "files/PJ.png"  
+   }  
+   else if (sw == 14) {
+        pic = "files/Ray.png"     
+   } else {
         pic = "files/Emily.png"
-    }
+   }
     document.getElementById('myImage').src = pic;
 }
 </script>
