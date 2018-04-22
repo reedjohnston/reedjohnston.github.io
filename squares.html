@@ -1,6 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <style>
 .btn-group .button {
     background-color: #FF8C00; /* darkorange */
@@ -26,17 +32,16 @@
 </style>
 </head>
 <body>
-<div align="center">
-<br>
-<table border cellspacing=0 cellpadding=1>
-<tr>
-<td colspan=1 rowspan=1>
-<h1>Squares until All-Star Break<h1>
-</td>
-</tr>
-</table> 
-<br>
-<div class="btn-group">
+
+<div class="jumbotron text-center">
+  <h1>Squares until All-Star Break</h1> 
+</div>
+  
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+      <h3>Column 1</h3>
+      <<div class="btn-group">
  
 <button class="button" onclick="light(14)">Ray</button>     
 <button class="button" onclick="light(13)">PJ</button>     
@@ -55,7 +60,9 @@
 <button class="button" onclick="light(0)">Emily</button>
 
 </div>
-<br>    
+     
+</div>
+<div class="col-sm-4">    
 <script>
 function light(sw) {
     var pic;
@@ -110,6 +117,6 @@ function light(sw) {
 <img id="myImage" src="files/Squares.png" width="900" height="600">
 
 
-    </div>
+</div>
 </body>
 </html> 
