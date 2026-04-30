@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sticky Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #e8e4dc;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(232,228,220,0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.app-title {
+  font-family: 'Caveat', cursive;
+  font-size: 22px; font-weight: 700; color: #2c2c2a;
+  margin-right: 6px; letter-spacing: -0.3px;
+}
+.tb-sep { width: 1px; height: 22px; background: rgba(0,0,0,0.15); margin: 0 2px; flex-shrink:0; }
+.tb-label { font-size: 11px; color: #888780; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; white-space:nowrap; }
+
+.color-swatch {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s; flex-shrink: 0;
+}
+.color-swatch:hover { transform: scale(1.25); }
+.color-swatch.active { border-color: #2c2c2a; }
+
+.mode-tabs {
+  display: flex; background: rgba(255,255,255,0.65);
+  border: 0.5px solid rgba(0,0,0,0.15);
+  border-radius: 8px; padding: 2px; gap: 2px;
+}
+.mode-tab {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; padding: 4px 11px;
+  border: none; background: transparent; cursor: pointer;
+  border-radius: 6px; color: #888780; font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.mode-tab.active { background: #fff; color: #2c2c2a; }
+
+.tb-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  padding: 6px 13px; border-radius: 7px;
+  border: 0.5px solid rgba(0,0,0,0.2);
+  background: #fff; color: #2c2c2a; cursor: pointer;
+  transition: background 0.15s, transform 0.1s; white-space: nowrap;
+}
+.tb-btn:hover { background: #f5f3ee; }
+.tb-btn:active { transform: scale(0.97); }
+.tb-btn.accent { background: #2c2c2a; color: #f0ede6; border-color: #2c2c2a; }
+.tb-btn.accent:hover { background: #444441; }
+
+/* ── Canvas ── */
+#canvas {
+  position: relative;
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 0;
+  min-height: calc(100vh - 56px);
+}
+
+/* ── Sections ── */
+.section {
+  position: relative;
+  margin-bottom: 24px;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(0,0,0,0.18);
+  padding: 46px 20px 22px;
+  background: rgba(255,255,255,0.2);
+  min-height: 170px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.section.drag-over {
+  border-color: rgba(0,0,0,0.45);
+  background: rgba(255,255,255,0.35);
+}
+.section-header {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 9px 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title-input {
+  font-family: 'Caveat', cursive;
+  font-size: 19px; font-weight: 700; color: #2c2c2a;
+  background: transparent; border: none; outline: none;
+  flex: 1; min-width: 0;
+}
+.section-title-input::placeholder { color: rgba(0,0,0,0.3); font-weight: 400; }
+.section-del-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; color: rgba(0,0,0,0.3);
+  padding: 3px 8px; border-radius: 5px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s, background 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.section:hover .section-del-btn { opacity: 1; }
+.section-del-btn:hover { color: #c0392b; background: rgba(192,57,43,0.08); }
+.section-notes {
+  display: flex; flex-wrap: wrap;
+  gap: 18px; align-items: flex-start; min-height: 80px;
+}
+
+/* ── Loose area ── */
+#loose-area {
+  position: relative;
+  display: flex; flex-wrap: wrap;
+  gap: 18px; align-items: flex-start;
+  min-height: 160px; padding: 6px 0;
+}
+#loose-area.dz-active {
+  outline: 1.5px dashed rgba(0,0,0,0.22);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+}
+
+/* ── Empty hint ── */
+.empty-hint {
+  width: 100%; text-align: center;
+  padding: 60px 0 30px;
+  color: rgba(0,0,0,0.3); font-size: 14px;
+  pointer-events: none;
+}
+.empty-hint-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+
+/* ── Notes ── */
+.note {
+  width: 190px; min-height: 165px;
+  padding: 11px 11px 8px;
+  border-radius: 3px;
+  position: relative;
+  display: flex; flex-direction: column;
+  box-shadow: 2px 5px 14px rgba(0,0,0,0.13), 0 1px 3px rgba(0,0,0,0.07);
+  cursor: default;
+  user-select: none;
+  transition: box-shadow 0.2s;
+  animation: pop-in 0.22s cubic-bezier(0.34,1.56,0.64,1) both;
+  flex-shrink: 0;
+}
+.note:hover { box-shadow: 3px 8px 22px rgba(0,0,0,0.18); }
+
+/* dragging state */
+.note.is-dragging {
+  opacity: 0.35;
+  box-shadow: none !important;
+}
+
+@keyframes pop-in {
+  from { opacity:0; transform: scale(0.82) rotate(var(--rot,0deg)); }
+  to   { opacity:1; transform: scale(1)    rotate(var(--rot,0deg)); }
+}
+
+/* pin */
+.note::before {
+  content: ''; position: absolute;
+  top: -10px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 15px;
+  background: rgba(0,0,0,0.22); border-radius: 2px;
+  clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+}
+
+.note-grab-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 26px;
+  cursor: grab; z-index: 3; border-radius: 3px 3px 0 0;
+}
+.note-grab-bar:active { cursor: grabbing; }
+
+.note-header {
+  display: flex; align-items: flex-start; gap: 5px;
+  margin-bottom: 5px; margin-top: 3px;
+}
+.note-title {
+  font-family: 'Caveat', cursive;
+  font-size: 16px; font-weight: 700; color: rgba(0,0,0,0.78);
+  border: none; background: transparent; width: 100%;
+  outline: none; padding: 0; line-height: 1.2;
+  cursor: text; user-select: text;
+}
+.note-title::placeholder { color: rgba(0,0,0,0.28); font-weight: 400; }
+.note-del {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; color: rgba(0,0,0,0.35);
+  padding: 1px 4px; border-radius: 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0; line-height: 1; margin-top: 1px;
+}
+.note:hover .note-del { opacity: 1; }
+.note-del:hover { color: #c0392b; }
+.divider { border: none; border-top: 1px solid rgba(0,0,0,0.11); margin: 4px 0 7px; }
+.note-body {
+  font-family: 'Caveat', cursive; font-size: 17px;
+  color: rgba(0,0,0,0.74); border: none; background: transparent;
+  resize: none; outline: none; flex: 1; min-height: 85px;
+  line-height: 1.55; width: 100%; cursor: text; user-select: text;
+}
+.note-body::placeholder { color: rgba(0,0,0,0.28); }
+.note-footer {
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: rgba(0,0,0,0.35); text-align: right; margin-top: 6px;
+}
+
+/* checklist */
+.note-items { list-style: none; }
+.note-item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; }
+.note-item input[type="checkbox"] { margin-top: 3px; cursor: pointer; flex-shrink: 0; accent-color: rgba(0,0,0,0.55); }
+.note-item span { font-family: 'Caveat', cursive; font-size: 16px; color: rgba(0,0,0,0.72); line-height: 1.4; flex:1; word-break:break-word; user-select:text; cursor:text; }
+.note-item span.done { text-decoration: line-through; color: rgba(0,0,0,0.35); }
+.add-item-row { display:flex; gap:5px; margin-top:6px; }
+.add-item-input { font-family:'Caveat',cursive; font-size:15px; border:none; background:rgba(0,0,0,0.08); border-radius:4px; padding:3px 7px; outline:none; flex:1; color:rgba(0,0,0,0.7); min-width:0; cursor:text; user-select:text; }
+.add-item-btn { background:rgba(0,0,0,0.14); border:none; border-radius:4px; padding:3px 9px; cursor:pointer; font-size:15px; color:rgba(0,0,0,0.6); font-weight:600; }
+.add-item-btn:hover { background:rgba(0,0,0,0.22); }
+
+/* ── Floating drag clone ── */
+#drag-clone {
+  position: fixed; pointer-events: none; z-index: 99999;
+  display: none; transform-origin: top left;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="app-title">📌 Stickies</span>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Color</span>
+  <button class="color-swatch active" data-color="#FDE68A" style="background:#FDE68A" title="Yellow"></button>
+  <button class="color-swatch" data-color="#A7F3D0" style="background:#A7F3D0" title="Mint"></button>
+  <button class="color-swatch" data-color="#BFDBFE" style="background:#BFDBFE" title="Sky"></button>
+  <button class="color-swatch" data-color="#FCA5A5" style="background:#FCA5A5" title="Rose"></button>
+  <button class="color-swatch" data-color="#DDD6FE" style="background:#DDD6FE" title="Lavender"></button>
+  <button class="color-swatch" data-color="#FED7AA" style="background:#FED7AA" title="Peach"></button>
+  <button class="color-swatch" data-color="#ffffff" style="background:#fff; border:1.5px solid #ccc;" title="White"></button>
+  <div class="tb-sep"></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="note">Note</button>
+    <button class="mode-tab" data-mode="list">Checklist</button>
+  </div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="addNoteBtn">+ Add note</button>
+  <button class="tb-btn accent" id="addSectionBtn">＋ Add section</button>
+</div>
+
+<div id="drag-clone"></div>
+
+<div id="canvas">
+  <div id="loose-area">
+    <div class="empty-hint" id="emptyHint">
+      <span class="empty-hint-icon">🗒️</span>
+      Choose a color &amp; click <strong>Add note</strong> — or create a <strong>section</strong> to group notes
+    </div>
+  </div>
+</div>
+
+<script>
+// ── globals ─────────────────────────────────────────────────────
+let selColor = '#FDE68A';
+let selMode  = 'note';
+let noteIdx  = 0, secIdx = 0;
+
+const ROTS = [-2.5,-1.5,-0.8,0,0.9,1.7,2.3];
+const canvas    = document.getElementById('canvas');
+const looseArea = document.getElementById('loose-area');
+const emptyHint = document.getElementById('emptyHint');
+const dragClone = document.getElementById('drag-clone');
+
+// ── toolbar ──────────────────────────────────────────────────────
+document.querySelectorAll('.color-swatch').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); selColor = b.dataset.color;
+  });
+});
+document.querySelectorAll('.mode-tab').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); selMode = b.dataset.mode;
+  });
+});
+document.getElementById('addNoteBtn').addEventListener('click', () => {
+  hideHint();
+  createNote(looseArea);
+});
+document.getElementById('addSectionBtn').addEventListener('click', () => {
+  hideHint(); createSection();
+});
+
+function hideHint() { if (emptyHint) emptyHint.style.display = 'none'; }
+
+// ── sections ─────────────────────────────────────────────────────
+function createSection() {
+  secIdx++;
+  const sec = document.createElement('div');
+  sec.className = 'section';
+  sec.innerHTML =
+    '<div class="section-header">' +
+      '<input class="section-title-input" placeholder="Section name…" maxlength="60" />' +
+      '<button class="section-del-btn">✕ Remove</button>' +
+    '</div>' +
+    '<div class="section-notes"></div>';
+  canvas.insertBefore(sec, looseArea);
+
+  const notesArea = sec.querySelector('.section-notes');
+
+  sec.querySelector('.section-del-btn').addEventListener('click', () => {
+    notesArea.querySelectorAll('.note').forEach(n => looseArea.appendChild(n));
+    sec.remove();
+  });
+
+  // drop zone
+  sec.addEventListener('dragover', e => { e.preventDefault(); sec.classList.add('drag-over'); });
+  sec.addEventListener('dragleave', e => { if (!sec.contains(e.relatedTarget)) sec.classList.remove('drag-over'); });
+  sec.addEventListener('drop', e => {
+    e.preventDefault(); sec.classList.remove('drag-over');
+    const id = e.dataTransfer.getData('text/plain');
+    const n  = document.getElementById(id);
+    if (n) notesArea.appendChild(n);
+  });
+
+  sec.querySelector('.section-title-input').focus();
+}
+
+// ── notes ────────────────────────────────────────────────────────
+function createNote(container) {
+  noteIdx++;
+  const rot = ROTS[Math.floor(Math.random() * ROTS.length)];
+  const id  = 'note-' + noteIdx;
+  const dateStr = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' });
+
+  const note = document.createElement('div');
+  note.className = 'note';
+  note.id = id;
+  note.setAttribute('draggable', 'true');
+  note.style.background = selColor;
+  note.style.setProperty('--rot', rot + 'deg');
+  note.style.transform = 'rotate(' + rot + 'deg)';
+  note.dataset.rot = rot;
+
+  if (selMode === 'list') {
+    note.innerHTML =
+      '<div class="note-grab-bar"></div>' +
+      '<div class="note-header"><input class="note-title" placeholder="List title…" maxlength="50" />' +
+      '<button class="note-del">✕</button></div>' +
+      '<hr class="divider" />' +
+      '<ul class="note-items" id="ul-'+id+'"></ul>' +
+      '<div class="add-item-row"><input class="add-item-input" id="ai-'+id+'" placeholder="Add item…" />' +
+      '<button class="add-item-btn">+</button></div>' +
+      '<div class="note-footer">'+dateStr+'</div>';
+  } else {
+    note.innerHTML =
+      '<div class="note-grab-bar"></div>' +
+      '<div class="note-header"><input class="note-title" placeholder="Title…" maxlength="50" />' +
+      '<button class="note-del">✕</button></div>' +
+      '<hr class="divider" />' +
+      '<textarea class="note-body" placeholder="Write your note…"></textarea>' +
+      '<div class="note-footer">'+dateStr+'</div>';
+  }
+
+  container.appendChild(note);
+
+  // delete
+  note.querySelector('.note-del').addEventListener('click', e => {
+    e.stopPropagation();
+    note.style.transition = 'opacity 0.18s, transform 0.18s';
+    note.style.opacity = '0';
+    note.style.transform = 'rotate('+rot+'deg) scale(0.8)';
+    setTimeout(() => note.remove(), 200);
+  });
+
+  // checklist
+  if (selMode === 'list') {
+    const inp = document.getElementById('ai-'+id);
+    const ul  = document.getElementById('ul-'+id);
+    const btn = note.querySelector('.add-item-btn');
+    function addItem() {
+      const v = inp.value.trim(); if (!v) return;
+      const li = document.createElement('li'); li.className = 'note-item';
+      li.innerHTML = '<input type="checkbox"/><span>'+esc(v)+'</span>';
+      li.querySelector('input').addEventListener('change', function() {
+        li.querySelector('span').classList.toggle('done', this.checked);
+      });
+      ul.appendChild(li); inp.value = ''; inp.focus();
+    }
+    btn.addEventListener('click', addItem);
+    inp.addEventListener('keydown', e => { if (e.key==='Enter') addItem(); });
+    inp.addEventListener('pointerdown', e => e.stopPropagation());
+  }
+
+  // stop inputs stealing pointer events
+  note.querySelectorAll('input,textarea').forEach(el => {
+    el.addEventListener('pointerdown', e => e.stopPropagation());
+  });
+
+  // HTML5 drag events (cross-zone)
+  note.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', note.id);
+    e.dataTransfer.effectAllowed = 'move';
+    // blank ghost
+    const ghost = document.createElement('div');
+    ghost.style.cssText = 'width:1px;height:1px;position:fixed;top:-100px';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
+    setTimeout(() => { document.body.removeChild(ghost); }, 0);
+  });
+
+  // pointer drag (visual clone)
+  setupPointerDrag(note);
+
+  const t = note.querySelector('input.note-title');
+  if (t) setTimeout(() => t.focus(), 50);
+  return note;
+}
+
+// ── Pointer drag ─────────────────────────────────────────────────
+let pd = null; // active drag state
+
+function setupPointerDrag(note) {
+  const bar = note.querySelector('.note-grab-bar');
+
+  function onDown(e) {
+    // only on grab bar or non-interactive areas
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'button') return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+
+    const rect = note.getBoundingClientRect();
+    const ox = e.clientX - rect.left;
+    const oy = e.clientY - rect.top;
+    const rot = parseFloat(note.dataset.rot) || 0;
+
+    // build visual clone
+    const clone = note.cloneNode(true);
+    clone.style.width  = rect.width  + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.transform = 'rotate(' + (rot+2) + 'deg) scale(1.05)';
+    clone.style.boxShadow = '6px 16px 40px rgba(0,0,0,0.28)';
+    clone.style.opacity = '0.92';
+    clone.style.animation = 'none';
+    clone.style.position = 'relative';
+    clone.style.margin = '0';
+
+    dragClone.innerHTML = '';
+    dragClone.appendChild(clone);
+    dragClone.style.display = 'block';
+    dragClone.style.left = (e.clientX - ox) + 'px';
+    dragClone.style.top  = (e.clientY - oy) + 'px';
+
+    note.classList.add('is-dragging');
+    // trigger HTML5 dragstart for drop zone awareness
+    note.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+
+    pd = { note, ox, oy, rot };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup',   onUp);
+    window.addEventListener('pointercancel', onUp);
+  }
+
+  bar.addEventListener('pointerdown', onDown);
+  note.addEventListener('pointerdown', onDown);
+}
+
+function onMove(e) {
+  if (!pd) return;
+  dragClone.style.left = (e.clientX - pd.ox) + 'px';
+  dragClone.style.top  = (e.clientY - pd.oy) + 'px';
+
+  // highlight hovered zones
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over'));
+  looseArea.classList.remove('dz-active');
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (el) {
+    const sec = el.closest('.section');
+    if (sec) sec.classList.add('drag-over');
+    else if (el.closest('#loose-area')) looseArea.classList.add('dz-active');
+  }
+}
+
+function onUp(e) {
+  if (!pd) return;
+  dragClone.style.display = 'none';
+  pd.note.classList.remove('is-dragging');
+
+  // find drop target by point
+  const cx = e.clientX, cy = e.clientY;
+  let dropped = false;
+
+  document.querySelectorAll('.section').forEach(sec => {
+    sec.classList.remove('drag-over');
+    const r = sec.getBoundingClientRect();
+    if (!dropped && cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom) {
+      sec.querySelector('.section-notes').appendChild(pd.note);
+      dropped = true;
+    }
+  });
+
+  looseArea.classList.remove('dz-active');
+  if (!dropped) {
+    const r = looseArea.getBoundingClientRect();
+    if (cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom) {
+      looseArea.appendChild(pd.note);
+    }
+    // else leave in place
+  }
+
+  pd = null;
+  window.removeEventListener('pointermove', onMove);
+  window.removeEventListener('pointerup',   onUp);
+  window.removeEventListener('pointercancel', onUp);
+}
+
+// ── loose area HTML5 drop ─────────────────────────────────────────
+looseArea.addEventListener('dragover', e => { e.preventDefault(); looseArea.classList.add('dz-active'); });
+looseArea.addEventListener('dragleave', e => { if (!looseArea.contains(e.relatedTarget)) looseArea.classList.remove('dz-active'); });
+looseArea.addEventListener('drop', e => {
+  e.preventDefault(); looseArea.classList.remove('dz-active');
+  const id = e.dataTransfer.getData('text/plain');
+  const n  = document.getElementById(id);
+  if (n) looseArea.appendChild(n);
+});
+
+// ── helpers ──────────────────────────────────────────────────────
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
