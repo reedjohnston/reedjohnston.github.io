@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup Fantasy 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-mid: #9FE1CB;
+    --green-dark: #085041;
+    --gold: #FAC775;
+    --gold-dark: #412402;
+    --silver: #D3D1C7;
+    --silver-dark: #2C2C2A;
+    --bronze: #F5C4B3;
+    --bronze-dark: #4A1B0C;
+    --red-light: #FCEBEB;
+    --red-dark: #501313;
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --text: #1a1a18;
+    --text-muted: #6b6b65;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 4rem;
+  }
+
+  /* Header */
+  .site-header {
+    background: #0d1f17;
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--green);
+  }
+  .site-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 2px; line-height: 1; color: white; }
+  .site-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .header-badge { background: var(--green); color: white; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.04em; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 1.75rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
+  .tab { font-size: 13px; font-weight: 500; padding: 8px 18px; cursor: pointer; color: var(--text-muted); border-radius: 7px; background: none; border: none; transition: all 0.15s; }
+  .tab.active { background: var(--green); color: white; }
+  .tab:not(.active):hover { background: var(--surface2); color: var(--text); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Stats row */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.75rem; }
+  .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; }
+  .stat-label { font-size: 10px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--text); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  /* Leaderboard table */
+  .lb-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .lb-table { width: 100%; border-collapse: collapse; }
+  .lb-table thead { background: #0d1f17; }
+  .lb-table th { font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.5); text-align: left; padding: 10px 14px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .lb-table th.r { text-align: right; }
+  .lb-table td { padding: 12px 14px; font-size: 14px; color: var(--text); border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  .lb-table tr:last-child td { border-bottom: none; }
+  .lb-table tbody tr { transition: background 0.1s; }
+  .lb-table tbody tr:hover td { background: var(--surface2); }
+  .lb-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 500; }
+  .rank-1 { background: var(--gold); color: var(--gold-dark); }
+  .rank-2 { background: var(--silver); color: var(--silver-dark); }
+  .rank-3 { background: var(--bronze); color: var(--bronze-dark); }
+  .rank-n { background: var(--surface2); color: var(--text-muted); }
+  .manager-name { font-weight: 500; font-size: 15px; }
+  .pts-cell { font-weight: 500; font-size: 18px; color: var(--green); font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.5px; }
+  .gd-cell { font-size: 13px; color: var(--text-muted); }
+  .team-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: var(--surface2); color: var(--text-muted); border: 0.5px solid var(--border); white-space: nowrap; }
+  .chip.alive { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); font-weight: 500; }
+  .chip.eliminated { text-decoration: line-through; opacity: 0.4; }
+
+  /* Score entry */
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .score-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .score-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border); }
+  .score-manager { font-size: 15px; font-weight: 500; }
+  .score-total { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--green); letter-spacing: 0.5px; line-height: 1; }
+  .team-row { padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .team-row:last-child { border-bottom: none; }
+  .team-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .team-label { font-size: 12px; font-weight: 500; color: var(--text); }
+  .team-status { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 10px; cursor: pointer; user-select: none; letter-spacing: 0.04em; }
+  .status-in { background: var(--green-light); color: var(--green-dark); }
+  .status-out { background: var(--red-light); color: var(--red-dark); }
+  .team-inputs { display: flex; gap: 5px; align-items: flex-end; flex-wrap: wrap; }
+  .mini-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .mini-lbl { font-size: 9px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .mini-input { width: 36px; text-align: center; font-size: 12px; padding: 4px 2px; border-radius: 6px; border: 0.5px solid var(--border-strong); background: var(--surface2); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .mini-input:focus { outline: none; border-color: var(--green); background: white; }
+  .sep { font-size: 14px; color: var(--border-strong); align-self: center; padding: 0 1px; margin-bottom: 2px; }
+  .ko-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .ko-check { width: 15px; height: 15px; cursor: pointer; accent-color: var(--green); }
+  .ko-pts { font-size: 9px; background: var(--green-light); color: var(--green-dark); border-radius: 5px; padding: 1px 4px; font-weight: 500; }
+
+  .actions-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .actions-bar p { font-size: 13px; color: var(--text-muted); }
+  .save-btn { background: var(--green); color: white; border: none; border-radius: var(--radius); padding: 10px 22px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.15s; }
+  .save-btn:hover { opacity: 0.88; }
+  .save-btn:active { transform: scale(0.98); }
+
+  /* Rules tab */
+  .rules-block { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; }
+  .rules-block h3 { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
+  .rules-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .rule-pill { display: flex; flex-direction: column; align-items: center; background: var(--surface2); border-radius: var(--radius); padding: 12px 18px; min-width: 90px; border: 0.5px solid var(--border); }
+  .rule-pill.highlight { background: var(--green-light); border-color: var(--green-mid); }
+  .rule-pill-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .rule-pill.highlight .rule-pill-lbl { color: var(--green-dark); }
+  .rule-pill-pts { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--text); letter-spacing: 0.5px; line-height: 1; }
+  .rule-pill.highlight .rule-pill-pts { color: var(--green-dark); }
+  .rule-pill-unit { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .note { background: #0d1f17; color: rgba(255,255,255,0.7); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; border-left: 3px solid var(--green); }
+  .note strong { color: white; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <div class="site-title">⚽ World Cup Fantasy 2026</div>
+    <div class="site-sub">10 Managers · 4 Teams Each · FIFA World Cup</div>
+  </div>
+  <span class="header-badge">Live Tracker</span>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('leaderboard')">Leaderboard</button>
+    <button class="tab" onclick="switchTab('scores')">Enter Scores</button>
+    <button class="tab" onclick="switchTab('rules')">Scoring Rules</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="tab-leaderboard" class="section active">
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Current Leader</div>
+        <div class="stat-val" id="stat-leader">—</div>
+        <div class="stat-sub" id="stat-leader-pts">0 pts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Most Teams Alive</div>
+        <div class="stat-val" id="stat-alive-mgr">—</div>
+        <div class="stat-sub" id="stat-alive-ct">0 active</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Teams Remaining</div>
+        <div class="stat-val" id="stat-total-alive">40</div>
+        <div class="stat-sub">of 40 total</div>
+      </div>
+    </div>
+    <div class="lb-wrap">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Manager</th>
+            <th>Teams</th>
+            <th class="r" style="width:70px">Pts</th>
+            <th class="r" style="width:60px">GD</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCORES -->
+  <div id="tab-scores" class="section">
+    <div class="actions-bar">
+      <p>Enter W/D/L and GF/GA per team. Check knockout round wins. Toggle <strong>in/out</strong> to mark eliminations.</p>
+      <button class="save-btn" onclick="saveScores()">Save &amp; Update Leaderboard</button>
+    </div>
+    <div class="score-grid" id="score-grid"></div>
+  </div>
+
+  <!-- RULES -->
+  <div id="tab-rules" class="section">
+    <div class="rules-block">
+      <h3>Group Stage</h3>
+      <div class="rules-pills">
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Win</div><div class="rule-pill-pts">3</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill"><div class="rule-pill-lbl">Draw</div><div class="rule-pill-pts">1</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill"><div class="rule-pill-lbl">Loss</div><div class="rule-pill-pts">0</div><div class="rule-pill-unit">pts</div></div>
+      </div>
+    </div>
+    <div class="rules-block">
+      <h3>Knockout Rounds (per win)</h3>
+      <div class="rules-pills">
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Round of 32</div><div class="rule-pill-pts">4</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Round of 16</div><div class="rule-pill-pts">5</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Quarterfinal</div><div class="rule-pill-pts">6</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Semifinal</div><div class="rule-pill-pts">7</div><div class="rule-pill-unit">pts</div></div>
+        <div class="rule-pill highlight"><div class="rule-pill-lbl">Final (win)</div><div class="rule-pill-pts">10</div><div class="rule-pill-unit">pts</div></div>
+      </div>
+    </div>
+    <div class="note"><strong>Tiebreaker:</strong> Goal differential (GF − GA) across all four teams breaks ties on total points. GD is shown on the leaderboard but does not add to the point total.</div>
+  </div>
+</div>
+
+<script>
+const MANAGERS = [
+  { name:'Brian',   num:1,  teams:['Portugal','United States','Norway','Tunisia'] },
+  { name:'Robbie',  num:2,  teams:['England','Uruguay','Ecuador','Paraguay'] },
+  { name:'Abe',     num:3,  teams:['Brazil','Senegal','Austria','South Africa'] },
+  { name:'Reed',    num:4,  teams:['Mexico','Morocco','Sweden','Egypt'] },
+  { name:'Keo',     num:5,  teams:['Germany','Croatia','Australia','Qatar'] },
+  { name:'Jason',   num:6,  teams:['Netherlands','Colombia','South Korea','Scotland'] },
+  { name:'Ray',     num:7,  teams:['Belgium','Japan','Czech Republic','Algeria'] },
+  { name:'Danny',   num:8,  teams:['Spain','Iran','Panama','DR Congo'] },
+  { name:'Brandon', num:9,  teams:['France','Turkey','Canada','Saudi Arabia'] },
+  { name:'Dan',     num:10, teams:['Argentina','Switzerland','Ivory Coast','Uzbekistan'] },
+];
+
+const KO = [
+  { key:'r32', label:'R32', pts:4 },
+  { key:'r16', label:'R16', pts:5 },
+  { key:'qf',  label:'QF',  pts:6 },
+  { key:'sf',  label:'SF',  pts:7 },
+  { key:'f',   label:'Final', pts:10 },
+];
+
+const STORE_KEY = 'wc2026_standalone_v1';
+
+function teamKey(t) { return t.replace(/[\s'/]/g, '_'); }
+
+function defaultTeam() {
+  return { w:0, d:0, l:0, gf:0, ga:0, ko:{r32:false,r16:false,qf:false,sf:false,f:false}, alive:true };
+}
+
+function loadState() {
+  try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function persistState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+let state = loadState() || { teams:{} };
+MANAGERS.forEach(m => m.teams.forEach(t => { if (!state.teams[t]) state.teams[t] = defaultTeam(); }));
+
+function teamPts(t) {
+  const d = state.teams[t];
+  let p = d.w * 3 + d.d;
+  KO.forEach(r => { if (d.ko[r.key]) p += r.pts; });
+  return p;
+}
+function teamGD(t) { const d = state.teams[t]; return (d.gf||0) - (d.ga||0); }
+function mgrPts(m) { return m.teams.reduce((s,t) => s + teamPts(t), 0); }
+function mgrGD(m)  { return m.teams.reduce((s,t) => s + teamGD(t), 0); }
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', ['leaderboard','scores','rules'][i]===id));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if (id==='scores') renderScores();
+  if (id==='leaderboard') renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const sorted = [...MANAGERS].sort((a,b) => {
+    const diff = mgrPts(b) - mgrPts(a);
+    return diff !== 0 ? diff : mgrGD(b) - mgrGD(a);
+  });
+
+  const leader = sorted[0];
+  document.getElementById('stat-leader').textContent = leader.name;
+  document.getElementById('stat-leader-pts').textContent = mgrPts(leader) + ' pts';
+
+  const am = [...MANAGERS].map(m=>({name:m.name,c:m.teams.filter(t=>state.teams[t].alive).length})).sort((a,b)=>b.c-a.c)[0];
+  document.getElementById('stat-alive-mgr').textContent = am.name;
+  document.getElementById('stat-alive-ct').textContent = am.c + ' active';
+
+  const tot = MANAGERS.reduce((s,m)=>s+m.teams.filter(t=>state.teams[t].alive).length,0);
+  document.getElementById('stat-total-alive').textContent = tot;
+
+  const tbody = document.getElementById('lb-body');
+  tbody.innerHTML = '';
+  sorted.forEach((m, i) => {
+    const rank = i+1;
+    const pts  = mgrPts(m);
+    const gd   = mgrGD(m);
+    const bc   = rank<=3 ? 'rank-'+rank : 'rank-n';
+    const tr   = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank-badge ${bc}">${rank}</span></td>
+      <td><span class="manager-name">${m.name}</span> <span style="font-size:11px;color:var(--text-muted)">#${m.num}</span></td>
+      <td><div class="team-chips">${m.teams.map(t=>`<span class="chip ${state.teams[t].alive?'alive':'eliminated'}">${t}</span>`).join('')}</div></td>
+      <td class="r pts-cell">${pts}</td>
+      <td class="r gd-cell">${gd>0?'+':''}${gd}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderScores() {
+  const grid = document.getElementById('score-grid');
+  grid.innerHTML = '';
+  MANAGERS.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.innerHTML = `
+      <div class="score-card-header">
+        <div class="score-manager">${m.name} <span style="font-size:11px;font-weight:400;color:var(--text-muted)">#${m.num}</span></div>
+        <div class="score-total" id="ct-${m.num}">${mgrPts(m)}</div>
+      </div>
+      ${m.teams.map(t => {
+        const tk = teamKey(t);
+        const d  = state.teams[t];
+        return `<div class="team-row" id="tr-${tk}">
+          <div class="team-name-row">
+            <span class="team-label">${t}</span>
+            <span class="team-status ${d.alive?'status-in':'status-out'}" id="st-${tk}" onclick="toggleAlive('${tk}','${t}','${m.num}')">${d.alive?'IN':'OUT'}</span>
+          </div>
+          <div class="team-inputs">
+            <div class="mini-wrap"><div class="mini-lbl">W</div><input class="mini-input" type="number" min="0" id="w-${tk}" value="${d.w}" oninput="liveCalc('${tk}','${t}','${m.num}')"></div>
+            <div class="mini-wrap"><div class="mini-lbl">D</div><input class="mini-input" type="number" min="0" id="d-${tk}" value="${d.d}" oninput="liveCalc('${tk}','${t}','${m.num}')"></div>
+            <div class="mini-wrap"><div class="mini-lbl">L</div><input class="mini-input" type="number" min="0" id="l-${tk}" value="${d.l}" oninput="liveCalc('${tk}','${t}','${m.num}')"></div>
+            <div class="mini-wrap"><div class="mini-lbl">GF</div><input class="mini-input" type="number" min="0" id="gf-${tk}" value="${d.gf}" oninput="liveCalc('${tk}','${t}','${m.num}')"></div>
+            <div class="mini-wrap"><div class="mini-lbl">GA</div><input class="mini-input" type="number" min="0" id="ga-${tk}" value="${d.ga}" oninput="liveCalc('${tk}','${t}','${m.num}')"></div>
+            <div class="sep">|</div>
+            ${KO.map(r=>`<div class="ko-wrap"><div class="mini-lbl">${r.label}</div><input type="checkbox" class="ko-check" id="ko-${r.key}-${tk}" ${d.ko[r.key]?'checked':''} onchange="liveCalc('${tk}','${t}','${m.num}')"><div class="ko-pts">+${r.pts}</div></div>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function liveCalc(tk, team, mnum) {
+  const d = state.teams[team];
+  d.w  = parseInt(document.getElementById('w-'+tk).value)||0;
+  d.d  = parseInt(document.getElementById('d-'+tk).value)||0;
+  d.l  = parseInt(document.getElementById('l-'+tk).value)||0;
+  d.gf = parseInt(document.getElementById('gf-'+tk).value)||0;
+  d.ga = parseInt(document.getElementById('ga-'+tk).value)||0;
+  KO.forEach(r => { d.ko[r.key] = document.getElementById('ko-'+r.key+'-'+tk).checked; });
+  const m = MANAGERS.find(x=>x.num==mnum);
+  document.getElementById('ct-'+mnum).textContent = mgrPts(m);
+}
+
+function toggleAlive(tk, team, mnum) {
+  state.teams[team].alive = !state.teams[team].alive;
+  const el = document.getElementById('st-'+tk);
+  el.textContent = state.teams[team].alive ? 'IN' : 'OUT';
+  el.className = 'team-status ' + (state.teams[team].alive ? 'status-in' : 'status-out');
+}
+
+function saveScores() {
+  MANAGERS.forEach(m => m.teams.forEach(t => {
+    const tk = teamKey(t);
+    if (!document.getElementById('w-'+tk)) return;
+    const d = state.teams[t];
+    d.w  = parseInt(document.getElementById('w-'+tk).value)||0;
+    d.d  = parseInt(document.getElementById('d-'+tk).value)||0;
+    d.l  = parseInt(document.getElementById('l-'+tk).value)||0;
+    d.gf = parseInt(document.getElementById('gf-'+tk).value)||0;
+    d.ga = parseInt(document.getElementById('ga-'+tk).value)||0;
+    KO.forEach(r => { d.ko[r.key] = document.getElementById('ko-'+r.key+'-'+tk).checked; });
+  }));
+  persistState();
+  switchTab('leaderboard');
+}
+
+renderLeaderboard();
+</script>
+</body>
+</html>
