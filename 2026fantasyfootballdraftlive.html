@@ -136,10 +136,9 @@
 
 <header class="site-header">
   <div>
-    <div class="site-title">⚽ World Cup Fantasy 2026</div>
-    <div class="site-sub">10 Managers · 4 Teams Each · FIFA World Cup</div>
+    <div class="site-title">⚽ World Cup 2026 Fantasy Draft</div>
+    <div class="site-sub">2026 FIFA World Cup</div>
   </div>
-  <span class="header-badge">Live Tracker</span>
 </header>
 
 <div class="container">
@@ -215,23 +214,23 @@
 
 <script>
 const MANAGERS = [
-  { name:'Brian',   num:1,  teams:['Portugal','United States','Norway','Tunisia'] },
-  { name:'Robbie',  num:2,  teams:['England','Uruguay','Ecuador','Paraguay'] },
-  { name:'Abe',     num:3,  teams:['Brazil','Senegal','Austria','South Africa'] },
-  { name:'Reed',    num:4,  teams:['Mexico','Morocco','Sweden','Egypt'] },
-  { name:'Keo',     num:5,  teams:['Germany','Croatia','Australia','Qatar'] },
-  { name:'Jason',   num:6,  teams:['Netherlands','Colombia','South Korea','Scotland'] },
-  { name:'Ray',     num:7,  teams:['Belgium','Japan','Czech Republic','Algeria'] },
-  { name:'Danny',   num:8,  teams:['Spain','Iran','Panama','DR Congo'] },
-  { name:'Brandon', num:9,  teams:['France','Turkey','Canada','Saudi Arabia'] },
-  { name:'Dan',     num:10, teams:['Argentina','Switzerland','Ivory Coast','Uzbekistan'] },
+  { name:'Brian',   teams:['Portugal','United States','Norway','Tunisia'] },
+  { name:'Robbie',  teams:['England','Uruguay','Ecuador','Paraguay'] },
+  { name:'Abe',     teams:['Brazil','Senegal','Austria','South Africa'] },
+  { name:'Reed',    teams:['Mexico','Morocco','Sweden','Egypt'] },
+  { name:'Keo',     teams:['Germany','Croatia','Australia','Qatar'] },
+  { name:'Jason',   teams:['Netherlands','Colombia','South Korea','Scotland'] },
+  { name:'Ray',     teams:['Belgium','Japan','Czech Republic','Algeria'] },
+  { name:'Danny',   teams:['Spain','Iran','Panama','DR Congo'] },
+  { name:'Brandon', teams:['France','Turkey','Canada','Saudi Arabia'] },
+  { name:'Dan',     teams:['Argentina','Switzerland','Ivory Coast','Uzbekistan'] },
 ];
 
 const GROUPS = [
-  { letter:'A', host:'Mexico',        teams:['Mexico','Czech Republic','South Africa','South Korea'] },
-  { letter:'B', host:'Canada',        teams:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'] },
+  { letter:'A', host:null,            teams:['Mexico','Czech Republic','South Africa','South Korea'] },
+  { letter:'B', host:null,            teams:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'] },
   { letter:'C', host:null,            teams:['Brazil','Morocco','Croatia','Iran'] },
-  { letter:'D', host:'United States', teams:['United States','Paraguay','Australia','Turkey'] },
+  { letter:'D', host:null,            teams:['United States','Paraguay','Australia','Turkey'] },
   { letter:'E', host:null,            teams:['Germany','Curaçao','Ivory Coast','Ecuador'] },
   { letter:'F', host:null,            teams:['Netherlands','Japan','Sweden','Tunisia'] },
   { letter:'G', host:null,            teams:['Belgium','Egypt','Iran','New Zealand'] },
