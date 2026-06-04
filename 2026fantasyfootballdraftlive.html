@@ -227,23 +227,20 @@ const MANAGERS = [
 ];
 
 const GROUPS = [
-  { letter:'A', host:null,            teams:['Mexico','Czech Republic','South Africa','South Korea'] },
-  { letter:'B', host:null,            teams:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'] },
-  { letter:'C', host:null,            teams:['Brazil','Morocco','Croatia','Iran'] },
-  { letter:'D', host:null,            teams:['United States','Paraguay','Australia','Turkey'] },
-  { letter:'E', host:null,            teams:['Germany','Curaçao','Ivory Coast','Ecuador'] },
-  { letter:'F', host:null,            teams:['Netherlands','Japan','Sweden','Tunisia'] },
-  { letter:'G', host:null,            teams:['Belgium','Egypt','Iran','New Zealand'] },
-  { letter:'H', host:null,            teams:['Spain','Cape Verde','Saudi Arabia','Uruguay'] },
-  { letter:'I', host:null,            teams:['France','Senegal','Norway','Iraq'] },
-  { letter:'J', host:null,            teams:['Argentina','Algeria','Austria','Jordan'] },
-  { letter:'K', host:null,            teams:['Portugal','DR Congo','Uzbekistan','Colombia'] },
-  { letter:'L', host:null,            teams:['England','Croatia','Ghana','Panama'] },
+  { letter:'A', host:null, teams:['Mexico','Czech Republic','South Africa','South Korea'] },
+  { letter:'B', host:null, teams:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'] },
+  { letter:'C', host:null, teams:['Brazil','Morocco','Croatia','Iran'] },
+  { letter:'D', host:null, teams:['United States','Paraguay','Australia','Turkey'] },
+  { letter:'E', host:null, teams:['Germany','Curaçao','Ivory Coast','Ecuador'] },
+  { letter:'F', host:null, teams:['Netherlands','Japan','Sweden','Tunisia'] },
+  { letter:'G', host:null, teams:['Belgium','Egypt','Iran','New Zealand'] },
+  { letter:'H', host:null, teams:['Spain','Cape Verde','Saudi Arabia','Uruguay'] },
+  { letter:'I', host:null, teams:['France','Senegal','Norway','Iraq'] },
+  { letter:'J', host:null, teams:['Argentina','Algeria','Austria','Jordan'] },
+  { letter:'K', host:null, teams:['Portugal','DR Congo','Uzbekistan','Colombia'] },
+  { letter:'L', host:null, teams:['England','Croatia','Ghana','Panama'] },
 ];
 
-// Official R32 bracket (matches 73-88) per ESPN/SI/FIFA schedule
-// Each entry: { id, label, slotA, slotB }
-// slotA/slotB = '?1' (winner), '?2' (runner-up), '3rd:X/Y/Z' (best 3rd from those groups), or 'R32:N' (winner of R32 match N)
 const R32_MATCHES = [
   { id:'r32_0',  label:'Match 73', desc:'Grp A 2nd vs Grp B 2nd',            slotA:'A2', slotB:'B2' },
   { id:'r32_1',  label:'Match 74', desc:'Grp E 1st vs Best 3rd (A/B/C/D/F)', slotA:'E1', slotB:'3rd:A/B/C/D/F' },
@@ -263,19 +260,9 @@ const R32_MATCHES = [
   { id:'r32_15', label:'Match 88', desc:'Grp D 2nd vs Grp G 2nd',            slotA:'D2', slotB:'G2' },
 ];
 
-// R16 bracket pairings: which two R32 winners face each other (0-indexed match numbers)
-// Per SI: R32(2) vs R32(5), R32(1) vs R32(3), R32(4) vs R32(6), R32(7) vs R32(8),
-//         R32(11) vs R32(12), R32(9) vs R32(10), R32(14) vs R32(16), R32(13) vs R32(15)
-// (SI uses 1-indexed, we use 0-indexed so subtract 1)
 const R16_PAIRINGS = [
-  [1, 4],   // R16 M1: R32 match2 winner vs R32 match5 winner
-  [0, 2],   // R16 M2: R32 match1 winner vs R32 match3 winner
-  [3, 5],   // R16 M3: R32 match4 winner vs R32 match6 winner
-  [6, 7],   // R16 M4: R32 match7 winner vs R32 match8 winner
-  [10, 11], // R16 M5: R32 match11 winner vs R32 match12 winner
-  [8, 9],   // R16 M6: R32 match9 winner vs R32 match10 winner
-  [13, 15], // R16 M7: R32 match14 winner vs R32 match16 winner
-  [12, 14], // R16 M8: R32 match13 winner vs R32 match15 winner
+  [1, 4], [0, 2], [3, 5], [6, 7],
+  [10, 11], [8, 9], [13, 15], [12, 14],
 ];
 
 const KO_ROUNDS = [
@@ -297,7 +284,6 @@ let state = loadState() || { teams:{}, koScores:{} };
 if (!state.koScores) state.koScores = {};
 ALL_TEAMS.forEach(t => {
   if (!state.teams[t]) state.teams[t] = defaultTeam();
-  // migrate legacy gf/ga to gd
   const d = state.teams[t];
   if (d.gd === undefined) d.gd = (d.gf||0) - (d.ga||0);
 });
@@ -308,23 +294,20 @@ function getGroupRanking(letter) {
   return [...g.teams].sort((a,b)=>{
     const pd=teamPts(b)-teamPts(a); if(pd!==0) return pd;
     const gdd=groupGD(b)-groupGD(a); if(gdd!==0) return gdd;
-    return groupGD(b)-groupGD(a); // final tiebreaker: GD again (could extend with goals scored if needed)
+    return groupGD(b)-groupGD(a);
   });
 }
 
 function resolveSlot(slot) {
-  if (!slot || slot.startsWith('3rd:')) return null; // 3rd-place TBD
+  if (!slot || slot.startsWith('3rd:')) return null;
   const letter = slot[0], pos = parseInt(slot[1]) - 1;
   return getGroupRanking(letter)[pos] || null;
 }
 
-// Cache of bracket team pairs keyed by match id
 let _bt = {};
-function matchTeams(id) { return _bt[id] || { tA:null, tB:null }; }
 
 function computeBracket() {
   _bt = {};
-  // R32
   const r32W = R32_MATCHES.map(m => {
     const tA = resolveSlot(m.slotA), tB = resolveSlot(m.slotB);
     _bt[m.id] = { tA, tB };
@@ -332,7 +315,6 @@ function computeBracket() {
     return ms.winner === 'A' ? tA : ms.winner === 'B' ? tB : null;
   });
 
-  // R16
   const r16W = R16_PAIRINGS.map((pair, i) => {
     const id = 'r16_'+i;
     const tA = r32W[pair[0]], tB = r32W[pair[1]];
@@ -341,7 +323,6 @@ function computeBracket() {
     return ms.winner === 'A' ? tA : ms.winner === 'B' ? tB : null;
   });
 
-  // QF — pair sequential R16 winners: (0,1),(2,3),(4,5),(6,7)
   const qfW = [0,1,2,3].map(i => {
     const id = 'qf_'+i;
     const tA = r16W[i*2], tB = r16W[i*2+1];
@@ -350,7 +331,6 @@ function computeBracket() {
     return ms.winner === 'A' ? tA : ms.winner === 'B' ? tB : null;
   });
 
-  // SF
   const sfW = [0,1].map(i => {
     const id = 'sf_'+i;
     const tA = qfW[i*2], tB = qfW[i*2+1];
@@ -359,7 +339,6 @@ function computeBracket() {
     return ms.winner === 'A' ? tA : ms.winner === 'B' ? tB : null;
   });
 
-  // Final
   { const id='f_0'; _bt[id]={ tA:sfW[0], tB:sfW[1] }; }
 }
 
@@ -398,7 +377,7 @@ function teamPts(t) {
   return p;
 }
 function mgrPts(m) { return m.teams.reduce((s,t)=>s+teamPts(t),0); }
-function mgrGD(m)  { return m.teams.reduce((s,t)=>s+teamGD(t),0); }
+function mgrGD(m)  { return m.teams.reduce((s,t)=>s+(teamGD(t)||0),0); }
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
 const TAB_IDS=['leaderboard','groups','knockout','rules'];
@@ -423,13 +402,13 @@ function renderLeaderboard() {
   document.getElementById('stat-total-alive').textContent=MANAGERS.reduce((s,m)=>s+m.teams.filter(t=>state.teams[t]?.alive).length,0);
   const tbody=document.getElementById('lb-body'); tbody.innerHTML='';
   sorted.forEach((m,i)=>{
-    const rank=i+1,pts=mgrPts(m),gd=mgrGD(m);
+    const rank=i+1, pts=mgrPts(m), gd=mgrGD(m);
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><span class="rank-badge ${rank<=3?'rank-'+rank:'rank-n'}">${rank}</span></td>
-      <td><span class="manager-name">${m.name}</span> <span style="font-size:11px;color:var(--text-muted)">#${m.num}</span></td>
+      <td><span class="manager-name">${m.name}</span></td>
       <td><div class="team-chips">${m.teams.map(t=>`<span class="chip ${state.teams[t]?.alive?'alive':'eliminated'}">${t}</span>`).join('')}</div></td>
       <td class="r pts-cell">${pts}</td>
-      <td class="r gd-cell">${gd>0?'+':''}${gd}</td>`;
+      <td class="r gd-cell">${gd>0?'+':''}${isNaN(gd)?0:gd}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -490,36 +469,21 @@ function renderKnockout() {
   computeBracket();
   const content=document.getElementById('ko-content'); content.innerHTML='';
 
-  // R32
   addKORound(content, 'Round of 32', 4,
     R32_MATCHES.map(m => ({ id:m.id, label:m.label, desc:m.desc, tA:_bt[m.id]?.tA, tB:_bt[m.id]?.tB }))
   );
-
-  // R16
   addKORound(content, 'Round of 16', 5,
     R16_PAIRINGS.map((pair, i) => {
       const id='r16_'+i;
       return { id, label:'Match '+(i+1), desc:`R32 M${pair[0]+1} winner vs R32 M${pair[1]+1} winner`, tA:_bt[id]?.tA, tB:_bt[id]?.tB };
     })
   );
-
-  // QF
   addKORound(content, 'Quarterfinals', 6,
-    [0,1,2,3].map(i => {
-      const id='qf_'+i;
-      return { id, label:'QF '+(i+1), desc:'', tA:_bt[id]?.tA, tB:_bt[id]?.tB };
-    })
+    [0,1,2,3].map(i => { const id='qf_'+i; return { id, label:'QF '+(i+1), desc:'', tA:_bt[id]?.tA, tB:_bt[id]?.tB }; })
   );
-
-  // SF
   addKORound(content, 'Semifinals', 7,
-    [0,1].map(i => {
-      const id='sf_'+i;
-      return { id, label:'SF '+(i+1), desc:'', tA:_bt[id]?.tA, tB:_bt[id]?.tB };
-    })
+    [0,1].map(i => { const id='sf_'+i; return { id, label:'SF '+(i+1), desc:'', tA:_bt[id]?.tA, tB:_bt[id]?.tB }; })
   );
-
-  // Final
   addKORound(content, 'Final 🏆', 10,
     [{ id:'f_0', label:'World Cup Final', desc:'', tA:_bt['f_0']?.tA, tB:_bt['f_0']?.tB }]
   );
@@ -584,7 +548,7 @@ function scoreChanged(id) {
   if(gfA!==null&&gfB!==null) {
     if(gfA>gfB) { ms.winner='A'; ms.pensA=null; ms.pensB=null; }
     else if(gfB>gfA) { ms.winner='B'; ms.pensA=null; ms.pensB=null; }
-    else { ms.winner=null; } // draw → need pens
+    else { ms.winner=null; }
   }
   recalcKOPoints(); renderKnockout();
 }
@@ -609,9 +573,7 @@ function saveKnockout() {
   if(btn){ btn.textContent='Saved!'; setTimeout(()=>btn.textContent='Save & Update Leaderboard',1400); }
 }
 
-
 // ── LIVE SYNC ─────────────────────────────────────────────────────────────────
-// Maps openfootball API team names → our internal team names
 const API_NAME_MAP = {
   'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
   'USA':                  'United States',
@@ -637,7 +599,6 @@ async function syncLiveResults() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
-    // Only process finished group stage matches (those with score1 defined)
     const finished = data.matches.filter(m =>
       m.group && typeof m.score1 === 'number' && typeof m.score2 === 'number'
     );
@@ -649,7 +610,6 @@ async function syncLiveResults() {
       return;
     }
 
-    // Reset all group stage stats for teams that appear in the data
     const seenTeams = new Set();
     finished.forEach(m => {
       seenTeams.add(normalizeApiName(m.team1));
@@ -664,33 +624,22 @@ async function syncLiveResults() {
       }
     });
 
-    // Recompute from all finished matches
     let processed = 0;
     finished.forEach(m => {
       const t1 = normalizeApiName(m.team1);
       const t2 = normalizeApiName(m.team2);
       const s1 = m.score1, s2 = m.score2;
-
       if (!state.teams[t1] || !state.teams[t2]) return;
-
-      // GD
       state.teams[t1].gd += (s1 - s2);
       state.teams[t2].gd += (s2 - s1);
-
-      // W/D/L
-      if (s1 > s2) {
-        state.teams[t1].w++; state.teams[t2].l++;
-      } else if (s2 > s1) {
-        state.teams[t2].w++; state.teams[t1].l++;
-      } else {
-        state.teams[t1].d++; state.teams[t2].d++;
-      }
+      if (s1 > s2) { state.teams[t1].w++; state.teams[t2].l++; }
+      else if (s2 > s1) { state.teams[t2].w++; state.teams[t1].l++; }
+      else { state.teams[t1].d++; state.teams[t2].d++; }
       processed++;
     });
 
     persist();
 
-    // If currently on groups tab, re-render
     if (document.getElementById('tab-groups').classList.contains('active')) {
       renderGroups();
     }
@@ -706,6 +655,7 @@ async function syncLiveResults() {
   btn.disabled = false;
   btn.textContent = '⟳ Sync Live Results';
 }
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
 recalcKOPoints();
 renderLeaderboard();
