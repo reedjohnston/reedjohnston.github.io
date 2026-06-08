@@ -140,6 +140,68 @@
   .actions-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;}
   .actions-bar p{font-size:13px;color:var(--text-muted);}
 
+  /* ── MOBILE ─────────────────────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    /* Header */
+    .site-header { padding:0.9rem 1rem; }
+    .site-title { font-size:22px; }
+    .site-sub { display:none; }
+
+    /* Container */
+    .container { padding:1rem 0.75rem; }
+
+    /* Tabs — scrollable row */
+    .tabs { width:100%; overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tab { font-size:12px; padding:7px 12px; }
+
+    /* Stat cards — 3 across still but tighter */
+    .stat-row { gap:6px; }
+    .stat-card { padding:0.75rem 0.8rem; }
+    .stat-val { font-size:22px; }
+    .stat-sub { font-size:11px; }
+
+    /* Leaderboard — hide GD col, compress padding */
+    .lb-table th, .lb-table td { padding:9px 8px; }
+    .lb-table th:last-child, .lb-table td:last-child { display:none; }
+    .manager-name { font-size:13px; }
+    .pts-cell { font-size:16px; }
+    .chip { font-size:10px; padding:2px 5px; }
+
+    /* Actions bar */
+    .actions-bar { flex-direction:column; align-items:flex-start; gap:8px; }
+    .actions-bar > div { width:100%; display:flex; flex-wrap:wrap; gap:6px; }
+    .save-all-btn, .sync-btn { font-size:13px; padding:9px 14px; flex:1; text-align:center; }
+    #sync-status { width:100%; }
+
+    /* Group standings — 1 column */
+    .groups-grid { grid-template-columns:1fr; gap:10px; }
+    .group-table th, .group-table td { padding:7px 8px; font-size:12px; }
+    .w-input { width:30px; font-size:11px; }
+    .gd-input { width:36px !important; }
+    .team-flag { font-size:14px; }
+    .owner-tag { display:none; }
+
+    /* Fixtures — 1 column */
+    .fixtures-grid { grid-template-columns:1fr; gap:10px; }
+    .fixture-row { padding:8px 10px; gap:4px; }
+    .fixture-team { font-size:12px; gap:3px; }
+    .fixture-score { font-size:13px; min-width:38px; }
+    .fixture-score.pending { font-size:10px; }
+
+    /* Knockout — full width cards */
+    .ko-grid { gap:8px; }
+    .ko-match { min-width:0; max-width:100%; flex:1 1 100%; }
+    .ko-score-row { padding:8px 10px; }
+    .ko-team-name { font-size:12px; }
+    .ko-score-input { width:36px; font-size:14px; padding:5px 2px; }
+
+    /* Rules */
+    .rules-pills { gap:6px; }
+    .rule-pill { padding:10px 12px; min-width:70px; }
+    .rule-pill-pts { font-size:22px; }
+  }
+
   .rules-block{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1rem;}
   .rules-block h3{font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;}
   .rules-pills{display:flex;gap:10px;flex-wrap:wrap;}
