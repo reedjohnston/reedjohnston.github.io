@@ -74,6 +74,7 @@
   .group-table tr.fantasy-team td{background:#f0faf5;}
   .group-table tr.fantasy-team td:first-child{border-left:3px solid var(--green);padding-left:7px;}
   .team-name-cell{display:flex;align-items:center;gap:6px;}
+  .team-flag{font-size:14px;line-height:1;flex-shrink:0;}
   .owner-tag{font-size:9px;background:var(--green-light);color:var(--green-dark);padding:1px 5px;border-radius:6px;font-weight:500;}
   .w-input{width:26px;text-align:center;font-size:11px;padding:2px;border-radius:4px;border:0.5px solid var(--border-strong);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;}
   .w-input:focus{outline:none;border-color:var(--green);}
@@ -269,6 +270,21 @@ const KO_ROUNDS = [
   { key:'r32', pts:4 }, { key:'r16', pts:5 }, { key:'qf', pts:6 }, { key:'sf', pts:7 }, { key:'f', pts:10 },
 ];
 
+const FLAGS = {
+  'Mexico': '🇲🇽', 'Czech Republic': '🇨🇿', 'South Africa': '🇿🇦', 'South Korea': '🇰🇷',
+  'Canada': '🇨🇦', 'Bosnia and Herzegovina': '🇧🇦', 'Qatar': '🇶🇦', 'Switzerland': '🇨🇭',
+  'Brazil': '🇧🇷', 'Morocco': '🇲🇦', 'Haiti': '🇭🇹', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'United States': '🇺🇸', 'Paraguay': '🇵🇾', 'Australia': '🇦🇺', 'Turkey': '🇹🇷',
+  'Germany': '🇩🇪', 'Curaçao': '🇨🇼', 'Ivory Coast': '🇨🇮', 'Ecuador': '🇪🇨',
+  'Netherlands': '🇳🇱', 'Japan': '🇯🇵', 'Sweden': '🇸🇪', 'Tunisia': '🇹🇳',
+  'Belgium': '🇧🇪', 'Egypt': '🇪🇬', 'Iran': '🇮🇷', 'New Zealand': '🇳🇿',
+  'Spain': '🇪🇸', 'Cape Verde': '🇨🇻', 'Saudi Arabia': '🇸🇦', 'Uruguay': '🇺🇾',
+  'France': '🇫🇷', 'Senegal': '🇸🇳', 'Norway': '🇳🇴', 'Iraq': '🇮🇶',
+  'Argentina': '🇦🇷', 'Algeria': '🇩🇿', 'Austria': '🇦🇹', 'Jordan': '🇯🇴',
+  'Portugal': '🇵🇹', 'DR Congo': '🇨🇩', 'Uzbekistan': '🇺🇿', 'Colombia': '🇨🇴',
+  'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Croatia': '🇭🇷', 'Ghana': '🇬🇭', 'Panama': '🇵🇦',
+};
+
 const OWNER = {};
 MANAGERS.forEach(m => m.teams.forEach(t => { OWNER[t] = m.name; }));
 const FANTASY_TEAMS = new Set(MANAGERS.flatMap(m => m.teams));
@@ -429,7 +445,7 @@ function renderGroups() {
         <tbody>${ranked.map(t=>{
           const d=state.teams[t]||defaultTeam(),isFT=FANTASY_TEAMS.has(t),owner=OWNER[t]||'';
           return `<tr class="${isFT?'fantasy-team':''}">
-            <td><div class="team-name-cell">${t}${isFT?`<span class="owner-tag">${owner}</span>`:''}</div></td>
+            <td><div class="team-name-cell"><span class="team-flag">${FLAGS[t]||''}</span>${t}${isFT?`<span class="owner-tag">${owner}</span>`:''}</div></td>
             <td class="r"><input class="w-input" type="number" min="0" id="w_${tk(t)}" value="${d.w}" oninput="liveGrp('${tk(t)}','${t}')"></td>
             <td class="r"><input class="w-input" type="number" min="0" id="d_${tk(t)}" value="${d.d}" oninput="liveGrp('${tk(t)}','${t}')"></td>
             <td class="r"><input class="w-input" type="number" min="0" id="l_${tk(t)}" value="${d.l}" oninput="liveGrp('${tk(t)}','${t}')"></td>
