@@ -93,6 +93,11 @@
 
 
   /* FIXTURES */
+  .sort-toggle{display:flex;gap:2px;background:var(--surface2);border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:3px;}
+  .sort-btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:7px;border:none;background:none;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.14s;white-space:nowrap;}
+  .sort-btn.active{background:var(--green);color:white;}
+  .sort-btn:not(.active):hover{background:var(--surface);color:var(--text);}
+  .fixture-fantasy-legend{font-size:12px;color:var(--text-muted);}
   .fixtures-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
   .fixture-card{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:var(--radius-lg);overflow:hidden;}
   .fixture-card-header{background:#0a1a10;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
@@ -119,6 +124,7 @@
   .ko-match{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;min-width:220px;flex:1 1 220px;max-width:280px;}
   .ko-match-label{background:var(--surface2);font-size:10px;font-weight:500;color:var(--text-muted);padding:5px 10px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:0.5px solid var(--border);}
   .ko-match-sublabel{font-size:9px;color:var(--text-muted);padding:3px 10px 4px;background:var(--surface2);border-bottom:0.5px solid var(--border);font-style:italic;}
+  .ko-match-schedule{font-size:10px;color:var(--green-dark);background:var(--green-light);padding:3px 10px;border-bottom:0.5px solid var(--green-mid);font-weight:500;letter-spacing:0.02em;}
   .ko-score-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:7px 10px;border-bottom:0.5px solid var(--border);gap:6px;}
   .ko-score-row.winner-row{background:#f0faf5;}
   .ko-score-row.winner-row .ko-team-name{color:var(--green-dark);font-weight:500;}
@@ -183,7 +189,9 @@
     .owner-tag { display:none; }
 
     /* Fixtures — 1 column */
-    .fixtures-grid { grid-template-columns:1fr; gap:10px; }
+    .fixtures-grid { grid-template-columns:1fr !important; gap:10px; }
+    .sort-toggle { width:100%; }
+    .sort-btn { flex:1; text-align:center; }
     .fixture-row { padding:8px 10px; gap:4px; }
     .fixture-team { font-size:12px; gap:3px; }
     .fixture-score { font-size:13px; min-width:38px; }
@@ -266,7 +274,11 @@
 
   <div id="tab-fixtures" class="section">
     <div class="actions-bar">
-      <p>All 72 group stage matches across 12 groups. Scores update automatically when you sync.</p>
+      <p>All 72 group stage matches. <span class="fixture-fantasy-legend"><span class="fixture-fantasy-dot" style="display:inline-block;vertical-align:middle;margin-right:3px"></span>= fantasy team</span></p>
+      <div class="sort-toggle">
+        <button class="sort-btn active" id="sort-by-group" onclick="setFixtureSort('group')">By Group</button>
+        <button class="sort-btn" id="sort-by-matchday" onclick="setFixtureSort('matchday')">By Matchday</button>
+      </div>
     </div>
     <div class="fixtures-grid" id="fixtures-grid"></div>
   </div>
@@ -351,6 +363,47 @@ const R32_MATCHES = [
   { id:'r32_14', label:'Match 87', desc:'Grp K 1st vs Best 3rd (D/E/I/J/L)', slotA:'K1', slotB:'3rd:D/E/I/J/L' },
   { id:'r32_15', label:'Match 88', desc:'Grp D 2nd vs Grp G 2nd',            slotA:'D2', slotB:'G2' },
 ];
+
+// Official KO schedule: date (YYYY-MM-DD) + time in UTC for localKickoff()
+// Times stored as "HH:MM UTC+0" so localKickoff() can convert
+const KO_SCHEDULE = {
+  // Round of 32 (Jun 28 – Jul 3) — times in EDT (UTC-4) per official FIFA schedule
+  'r32_0':  { date:'2026-06-28', time:'19:00 UTC-4', venue:'Los Angeles' },
+  'r32_1':  { date:'2026-06-29', time:'20:00 UTC-4', venue:'Boston' },
+  'r32_2':  { date:'2026-06-29', time:'13:00 UTC-4', venue:'Houston' },
+  'r32_3':  { date:'2026-06-29', time:'21:00 UTC-4', venue:'Monterrey' },
+  'r32_4':  { date:'2026-06-30', time:'17:00 UTC-4', venue:'New York/NJ' },
+  'r32_5':  { date:'2026-06-30', time:'13:00 UTC-4', venue:'Dallas' },
+  'r32_6':  { date:'2026-06-30', time:'21:00 UTC-4', venue:'Mexico City' },
+  'r32_7':  { date:'2026-07-01', time:'12:00 UTC-4', venue:'Atlanta' },
+  'r32_8':  { date:'2026-07-01', time:'16:00 UTC-4', venue:'Seattle' },
+  'r32_9':  { date:'2026-07-01', time:'20:00 UTC-4', venue:'San Francisco' },
+  'r32_10': { date:'2026-07-02', time:'15:00 UTC-4', venue:'Los Angeles' },
+  'r32_11': { date:'2026-07-02', time:'19:00 UTC-4', venue:'Toronto' },
+  'r32_12': { date:'2026-07-02', time:'21:00 UTC-4', venue:'Vancouver' },
+  'r32_13': { date:'2026-07-03', time:'14:00 UTC-4', venue:'Dallas' },
+  'r32_14': { date:'2026-07-03', time:'18:00 UTC-4', venue:'Miami' },
+  'r32_15': { date:'2026-07-03', time:'21:30 UTC-4', venue:'Kansas City' },
+  // Round of 16 (Jul 4–7)
+  'r16_0':  { date:'2026-07-04', time:'17:00 UTC-4', venue:'Philadelphia' },
+  'r16_1':  { date:'2026-07-04', time:'13:00 UTC-4', venue:'Houston' },
+  'r16_2':  { date:'2026-07-05', time:'16:00 UTC-4', venue:'New York/NJ' },
+  'r16_3':  { date:'2026-07-05', time:'20:00 UTC-4', venue:'Mexico City' },
+  'r16_4':  { date:'2026-07-06', time:'15:00 UTC-4', venue:'Dallas' },
+  'r16_5':  { date:'2026-07-06', time:'20:00 UTC-4', venue:'Seattle' },
+  'r16_6':  { date:'2026-07-07', time:'16:00 UTC-4', venue:'Vancouver' },
+  'r16_7':  { date:'2026-07-07', time:'12:00 UTC-4', venue:'Atlanta' },
+  // Quarterfinals (Jul 9–11)
+  'qf_0':   { date:'2026-07-09', time:'16:00 UTC-4', venue:'Boston' },
+  'qf_1':   { date:'2026-07-10', time:'15:00 UTC-4', venue:'Los Angeles' },
+  'qf_2':   { date:'2026-07-11', time:'17:00 UTC-4', venue:'Miami' },
+  'qf_3':   { date:'2026-07-11', time:'21:00 UTC-4', venue:'Kansas City' },
+  // Semifinals (Jul 14–15)
+  'sf_0':   { date:'2026-07-14', time:'15:00 UTC-4', venue:'Dallas' },
+  'sf_1':   { date:'2026-07-15', time:'15:00 UTC-4', venue:'Atlanta' },
+  // Final (Jul 19)
+  'f_0':    { date:'2026-07-19', time:'15:00 UTC-4', venue:'New York/NJ' },
+};
 
 const R16_PAIRINGS = [
   [1, 4], [0, 2], [3, 5], [6, 7],
@@ -611,9 +664,15 @@ function buildMatchCard(id, label, desc, tA, tB) {
   const card=document.createElement('div'); card.className='ko-match';
   const ms=state.koScores[id]||{};
   const hasBoth=tA&&tB;
+  const sched = KO_SCHEDULE[id];
+  const schedHTML = sched ? (() => {
+    const dateStr = new Date(sched.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const timeStr = localKickoff(sched.date, sched.time);
+    return `<div class="ko-match-schedule">${dateStr} · ${timeStr} · ${sched.venue}</div>`;
+  })() : '';
 
   if(!hasBoth) {
-    card.innerHTML=`<div class="ko-match-label">${label}</div>${desc?`<div class="ko-match-sublabel">${desc}</div>`:''}<div class="ko-tbd">Teams TBD</div>`;
+    card.innerHTML=`<div class="ko-match-label">${label}</div>${schedHTML}${desc?`<div class="ko-match-sublabel">${desc}</div>`:''}<div class="ko-tbd">Teams TBD</div>`;
     return card;
   }
 
@@ -623,6 +682,7 @@ function buildMatchCard(id, label, desc, tA, tB) {
 
   card.innerHTML=`
     <div class="ko-match-label">${label}</div>
+    ${schedHTML}
     ${desc?`<div class="ko-match-sublabel">${desc}</div>`:''}
     <div class="ko-score-row ${winA?'winner-row':''}">
       <span class="ko-team-name">${FLAGS[tA]||''} ${tA}</span>
@@ -853,50 +913,148 @@ function getFixtureScore(t1, t2) {
   return state.fixtureScores[k1+'|'+k2] || state.fixtureScores[k2+'|'+k1] || null;
 }
 
+let fixtureSort = 'group'; // 'group' | 'matchday'
+
+function setFixtureSort(mode) {
+  fixtureSort = mode;
+  document.getElementById('sort-by-group').classList.toggle('active', mode === 'group');
+  document.getElementById('sort-by-matchday').classList.toggle('active', mode === 'matchday');
+  renderFixtures();
+}
+
+// Convert "2026-06-11" + "13:00 UTC-6" → local time string
+function localKickoff(date, time) {
+  try {
+    // Parse "HH:MM UTC±H" or "HH:MM UTC±HH"
+    const match = time.match(/^(\d{1,2}):(\d{2})\s*UTC([+-]\d+)/);
+    if (!match) return time;
+    const [, hh, mm, off] = match;
+    const offsetMins = parseInt(off) * 60;
+    // Build UTC timestamp
+    const utcMs = Date.UTC(
+      parseInt(date.slice(0,4)),
+      parseInt(date.slice(5,7)) - 1,
+      parseInt(date.slice(8,10)),
+      parseInt(hh) - Math.floor(offsetMins / 60),
+      parseInt(mm) - (offsetMins % 60)
+    );
+    return new Date(utcMs).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  } catch(e) { return time; }
+}
+
+function buildFixtureMatchHTML(m) {
+  const t1n = API_NAME_MAP[m.t1] || m.t1;
+  const t2n = API_NAME_MAP[m.t2] || m.t2;
+  const score = state.fixtureScores
+    ? (state.fixtureScores[t1n+'|'+t2n] || state.fixtureScores[t2n+'|'+t1n] || null)
+    : null;
+  const hasScore = score !== null;
+  const fwd = state.fixtureScores && !!state.fixtureScores[t1n+'|'+t2n];
+  const s1 = hasScore ? (fwd ? score.s1 : score.s2) : null;
+  const s2 = hasScore ? (fwd ? score.s2 : score.s1) : null;
+  const t1win = hasScore && s1 > s2, t2win = hasScore && s2 > s1;
+  const isFT1 = FANTASY_TEAMS.has(t1n), isFT2 = FANTASY_TEAMS.has(t2n);
+  const dateStr = new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const kickoff = localKickoff(m.date, m.time);
+  return `<div class="fixture-row ${hasScore?'has-score':''}">
+    <div class="fixture-team home ${t1win?'winner':''}">
+      ${isFT1?'<span class="fixture-fantasy-dot"></span>':''}
+      <span>${t1n}</span>
+      <span>${FLAGS[t1n]||''}</span>
+    </div>
+    <div class="fixture-score ${hasScore?'':'pending'}">${hasScore ? s1+' – '+s2 : `<span style="display:flex;flex-direction:column;align-items:center;gap:1px"><span>${dateStr}</span><span style="font-size:9px;opacity:0.8">${kickoff}</span></span>`}</div>
+    <div class="fixture-team away ${t2win?'winner':''}">
+      <span>${FLAGS[t2n]||''}</span>
+      <span>${t2n}</span>
+      ${isFT2?'<span class="fixture-fantasy-dot"></span>':''}
+    </div>
+  </div>`;
+}
+
 function renderFixtures() {
   const grid = document.getElementById('fixtures-grid');
   grid.innerHTML = '';
-  const groups = ['Group A','Group B','Group C','Group D','Group E','Group F',
-                  'Group G','Group H','Group I','Group J','Group K','Group L'];
-  groups.forEach(grp => {
-    const matches = GROUP_FIXTURES.filter(m => m.group === grp);
-    const card = document.createElement('div');
-    card.className = 'fixture-card';
-    // group header
-    let html = `<div class="fixture-card-header"><div class="fixture-group-name">${grp}</div></div>`;
-    // group by matchday
-    const matchdays = [...new Set(matches.map(m => m.round))];
-    matchdays.forEach(md => {
-      const mdMatches = matches.filter(m => m.round === md);
-      html += `<div class="fixture-matchday"><span class="fixture-matchday-label">${md}</span></div>`;
-      mdMatches.forEach(m => {
-        const t1n = API_NAME_MAP[m.t1] || m.t1;
-        const t2n = API_NAME_MAP[m.t2] || m.t2;
-        const score = state.fixtureScores ? (state.fixtureScores[t1n+'|'+t2n] || state.fixtureScores[t2n+'|'+t1n] || null) : null;
-        const hasScore = score !== null;
-        const s1 = hasScore ? (state.fixtureScores[t1n+'|'+t2n] ? score.s1 : score.s2) : null;
-        const s2 = hasScore ? (state.fixtureScores[t1n+'|'+t2n] ? score.s2 : score.s1) : null;
-        const t1win = hasScore && s1 > s2, t2win = hasScore && s2 > s1;
-        const isFT1 = FANTASY_TEAMS.has(t1n), isFT2 = FANTASY_TEAMS.has(t2n);
-        const dateStr = new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        html += `<div class="fixture-row ${hasScore?'has-score':''}">
-          <div class="fixture-team home ${t1win?'winner':''}">
-            ${isFT1?'<span class="fixture-fantasy-dot"></span>':''}
-            <span>${t1n}</span>
-            <span>${FLAGS[t1n]||''}</span>
-          </div>
-          <div class="fixture-score ${hasScore?'':'pending'}">${hasScore ? s1+' – '+s2 : dateStr}</div>
-          <div class="fixture-team away ${t2win?'winner':''}">
-            <span>${FLAGS[t2n]||''}</span>
-            <span>${t2n}</span>
-            ${isFT2?'<span class="fixture-fantasy-dot"></span>':''}
-          </div>
-        </div>`;
+
+  if (fixtureSort === 'group') {
+    // 2-col grid, one card per group
+    grid.style.gridTemplateColumns = '';
+    const groups = ['Group A','Group B','Group C','Group D','Group E','Group F',
+                    'Group G','Group H','Group I','Group J','Group K','Group L'];
+    groups.forEach(grp => {
+      const matches = GROUP_FIXTURES.filter(m => m.group === grp);
+      const card = document.createElement('div');
+      card.className = 'fixture-card';
+      let html = `<div class="fixture-card-header"><div class="fixture-group-name">${grp}</div></div>`;
+      const matchdays = [...new Set(matches.map(m => m.round))];
+      matchdays.forEach(md => {
+        html += `<div class="fixture-matchday"><span class="fixture-matchday-label">${md}</span></div>`;
+        matches.filter(m => m.round === md).forEach(m => { html += buildFixtureMatchHTML(m); });
       });
+      card.innerHTML = html;
+      grid.appendChild(card);
     });
-    card.innerHTML = html;
-    grid.appendChild(card);
-  });
+  } else {
+    // 1-col grid, one card per matchday, matches sorted by date+time
+    grid.style.gridTemplateColumns = '1fr';
+    const matchdays = [...new Set(GROUP_FIXTURES.map(m => m.round))].sort((a, b) => {
+      const numA = parseInt(a.replace('Matchday ','')), numB = parseInt(b.replace('Matchday ',''));
+      return numA - numB;
+    });
+    matchdays.forEach(md => {
+      const matches = GROUP_FIXTURES.filter(m => m.round === md)
+        .sort((a, b) => (a.date + a.time) < (b.date + b.time) ? -1 : 1);
+      const card = document.createElement('div');
+      card.className = 'fixture-card';
+      // Get date range for this matchday
+      const dates = [...new Set(matches.map(m => m.date))];
+      const dateLabel = dates.map(d => new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(' & ');
+      let html = `<div class="fixture-card-header">
+        <div class="fixture-group-name">${md}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:500">${dateLabel}</div>
+      </div>`;
+      // Sub-group by date within matchday
+      dates.forEach(date => {
+        const dayMatches = matches.filter(m => m.date === date);
+        const dateFmt = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        html += `<div class="fixture-matchday"><span class="fixture-matchday-label">${dateFmt}</span></div>`;
+        dayMatches.forEach(m => {
+          const groupBadge = `<span style="font-size:9px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);padding:1px 5px;border-radius:5px;font-weight:500">${m.group}</span>`;
+          // Prepend group label on the row
+          const t1n = API_NAME_MAP[m.t1] || m.t1;
+          const t2n = API_NAME_MAP[m.t2] || m.t2;
+          const score = state.fixtureScores
+            ? (state.fixtureScores[t1n+'|'+t2n] || state.fixtureScores[t2n+'|'+t1n] || null)
+            : null;
+          const hasScore = score !== null;
+          const fwd = state.fixtureScores && !!state.fixtureScores[t1n+'|'+t2n];
+          const s1 = hasScore ? (fwd ? score.s1 : score.s2) : null;
+          const s2 = hasScore ? (fwd ? score.s2 : score.s1) : null;
+          const t1win = hasScore && s1 > s2, t2win = hasScore && s2 > s1;
+          const isFT1 = FANTASY_TEAMS.has(t1n), isFT2 = FANTASY_TEAMS.has(t2n);
+          const dateStr = new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+          const kickoff = localKickoff(m.date, m.time);
+          html += `<div class="fixture-row matchday-row ${hasScore?'has-score':''}">
+            <div class="fixture-team home ${t1win?'winner':''}">
+              ${isFT1?'<span class="fixture-fantasy-dot"></span>':''}
+              <span>${t1n}</span>
+              <span>${FLAGS[t1n]||''}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+              <div class="fixture-score ${hasScore?'':'pending'}">${hasScore ? s1+' – '+s2 : kickoff}</div>
+              <div style="font-size:9px;background:var(--green-light);color:var(--green-dark);padding:1px 5px;border-radius:5px;font-weight:500;white-space:nowrap">${m.group}</div>
+            </div>
+            <div class="fixture-team away ${t2win?'winner':''}">
+              <span>${FLAGS[t2n]||''}</span>
+              <span>${t2n}</span>
+              ${isFT2?'<span class="fixture-fantasy-dot"></span>':''}
+            </div>
+          </div>`;
+        });
+      });
+      card.innerHTML = html;
+      grid.appendChild(card);
+    });
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
