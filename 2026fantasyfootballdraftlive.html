@@ -25,7 +25,7 @@
   .container { max-width:1140px; margin:0 auto; padding:1.75rem 1.5rem; }
 
   .tabs { display:flex; gap:2px; margin-bottom:1.75rem; background:var(--surface); border:0.5px solid var(--border-strong); border-radius:var(--radius); padding:4px; width:fit-content; flex-wrap:wrap; }
-  .tab { font-size:13px; font-weight:500; padding:8px 16px; cursor:pointer; color:var(--text-muted); border-radius:7px; background:none; border:none; font-family:'DM Sans',sans-serif; transition:all 0.14s; white-space:nowrap; }
+  .tab { font-size:15px; font-weight:500; padding:10px 18px; cursor:pointer; color:var(--text-muted); border-radius:7px; background:none; border:none; font-family:'DM Sans',sans-serif; transition:all 0.14s; white-space:nowrap; }
   .tab.active { background:var(--green); color:white; }
   .tab:not(.active):hover { background:var(--surface2); color:var(--text); }
   .section { display:none; }
@@ -40,7 +40,7 @@
   .lb-wrap { background:var(--surface); border:0.5px solid var(--border-strong); border-radius:var(--radius-lg); overflow:hidden; }
   .lb-table { width:100%; border-collapse:collapse; }
   .lb-table thead { background:#0a1a10; }
-  .lb-table th { font-size:10px; font-weight:500; color:rgba(255,255,255,0.45); text-align:left; padding:10px 14px; letter-spacing:0.08em; text-transform:uppercase; }
+  .lb-table th { font-size:10px; font-weight:500; color:rgba(255,255,255,1); text-align:left; padding:10px 14px; letter-spacing:0.08em; text-transform:uppercase; }
   .lb-table th.r { text-align:right; }
   .lb-table td { padding:11px 14px; font-size:14px; color:var(--text); border-bottom:0.5px solid var(--border); vertical-align:middle; }
   .lb-table tr:last-child td { border-bottom:none; }
@@ -53,8 +53,9 @@
   .rank-n{background:var(--surface2);color:var(--text-muted);}
   .manager-name{font-weight:500;font-size:15px;}
   .manager-teams-mobile{display:none;}
-  .pts-cell{font-weight:500;font-size:18px;color:var(--green);font-family:'Bebas Neue',sans-serif;letter-spacing:0.5px;}
-  .gd-cell{font-size:13px;color:var(--text-muted);}
+  .mp-cell{font-size:18px;color:var(--text-muted);font-family:'Bebas Neue',sans-serif;letter-spacing:0.5px;}
+  .pts-cell{font-weight:700;font-size:22px;color:var(--green);font-family:'Bebas Neue',sans-serif;letter-spacing:0.5px;}
+  .gd-cell{font-size:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:0.5px;}
   .team-chips{display:flex;flex-wrap:wrap;gap:4px;}
   .chip{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text-muted);border:0.5px solid var(--border-strong);white-space:nowrap;}
   .chip.alive{background:var(--green-light);color:var(--green-dark);border-color:var(--green-mid);font-weight:500;}
@@ -158,26 +159,22 @@
     .container { padding:1rem 0.75rem; }
 
     /* Tabs — scrollable row */
-    .tabs { width:100%; overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-    .tabs::-webkit-scrollbar { display:none; }
-    .tab { font-size:12px; padding:7px 12px; }
+    .tabs { width:100%; flex-wrap:wrap; }
+    .tab { font-size:14px; padding:9px 14px; flex:1 1 auto; text-align:center; }
 
-    /* Stat cards — 3 across still but tighter */
-    .stat-row { gap:6px; }
-    .stat-card { padding:0.75rem 0.8rem; }
-    .stat-val { font-size:22px; }
-    .stat-sub { font-size:11px; }
 
     /* Leaderboard — restructure for mobile */
     .lb-table th:nth-child(3), .lb-table td:nth-child(3) { display:none; } /* hide Teams col */
     .lb-table th, .lb-table td { padding:8px 6px; }
     .lb-table th:nth-child(1), .lb-table td:nth-child(1) { width:32px; padding-left:8px; }
     .lb-table th:nth-child(4), .lb-table td:nth-child(4) { width:44px; } /* Pts */
-    .lb-table th:nth-child(5), .lb-table td:nth-child(5) { width:38px; padding-right:8px; } /* GD */
+    .lb-table th:nth-child(5), .lb-table td:nth-child(5) { width:38px; } /* GD */
+    .lb-table th:nth-child(6), .lb-table td:nth-child(6) { width:36px; padding-right:8px; } /* MP */
     .manager-name { font-size:13px; }
     .manager-teams-mobile { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
-    .pts-cell { font-size:16px; }
-    .gd-cell { font-size:12px; }
+    .mp-cell { font-size:14px; }
+    .pts-cell { font-size:18px; }
+    .gd-cell { font-size:14px; }
     .chip { font-size:10px; padding:2px 5px; }
 
     /* Actions bar */
@@ -248,17 +245,14 @@
   </div>
 
   <div id="tab-leaderboard" class="section active">
-    <div class="stat-row">
-      <div class="stat-card"><div class="stat-label">Current Leader</div><div class="stat-val" id="stat-leader">—</div><div class="stat-sub" id="stat-leader-pts">0 pts</div></div>
-      <div class="stat-card"><div class="stat-label">Most Teams Alive</div><div class="stat-val" id="stat-alive-mgr">—</div><div class="stat-sub" id="stat-alive-ct">0 active</div></div>
-      <div class="stat-card"><div class="stat-label">Teams Remaining</div><div class="stat-val" id="stat-total-alive">40</div><div class="stat-sub">of 40 total</div></div>
-    </div>
+
     <div class="lb-wrap">
       <table class="lb-table">
         <thead><tr>
           <th style="width:40px">#</th><th>Manager</th><th>Teams</th>
           <th class="r" style="width:70px">Pts</th>
           <th class="r" style="width:60px">GD</th>
+          <th class="r" style="width:44px">MP</th>
         </tr></thead>
         <tbody id="lb-body"></tbody>
       </table>
@@ -282,8 +276,8 @@
     <div class="actions-bar">
       <p>All 72 group stage matches. <span class="fixture-fantasy-legend"><span class="fixture-fantasy-dot" style="display:inline-block;vertical-align:middle;margin-right:3px"></span>= fantasy team</span></p>
       <div class="sort-toggle">
-        <button class="sort-btn active" id="sort-by-group" onclick="setFixtureSort('group')">By Group</button>
-        <button class="sort-btn" id="sort-by-matchday" onclick="setFixtureSort('matchday')">By Matchday</button>
+        <button class="sort-btn active" id="sort-by-matchday" onclick="setFixtureSort('matchday')">By Matchday</button>
+        <button class="sort-btn" id="sort-by-group" onclick="setFixtureSort('group')">By Group</button>
       </div>
     </div>
     <div class="fixtures-grid" id="fixtures-grid"></div>
@@ -562,15 +556,11 @@ function switchTab(id) {
 function renderLeaderboard() {
   const sorted=[...MANAGERS].sort((a,b)=>{ const d=mgrPts(b)-mgrPts(a); return d!==0?d:mgrGD(b)-mgrGD(a); });
   const leader=sorted[0];
-  document.getElementById('stat-leader').textContent=leader.name;
-  document.getElementById('stat-leader-pts').textContent=mgrPts(leader)+' pts';
-  const am=[...MANAGERS].map(m=>({name:m.name,c:m.teams.filter(t=>state.teams[t]?.alive).length})).sort((a,b)=>b.c-a.c)[0];
-  document.getElementById('stat-alive-mgr').textContent=am.name;
-  document.getElementById('stat-alive-ct').textContent=am.c+' active';
-  document.getElementById('stat-total-alive').textContent=MANAGERS.reduce((s,m)=>s+m.teams.filter(t=>state.teams[t]?.alive).length,0);
+
   const tbody=document.getElementById('lb-body'); tbody.innerHTML='';
   sorted.forEach((m,i)=>{
     const rank=i+1, pts=mgrPts(m), gd=mgrGD(m);
+    const mp=m.teams.reduce((s,t)=>{ const d=state.teams[t]; return s+(d?(d.w+d.d+d.l):0); },0);
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><span class="rank-badge ${rank<=3?'rank-'+rank:'rank-n'}">${rank}</span></td>
       <td>
@@ -579,7 +569,8 @@ function renderLeaderboard() {
       </td>
       <td><div class="team-chips">${m.teams.map(t=>`<span class="chip ${state.teams[t]?.alive?'alive':'eliminated'}">${FLAGS[t]||''} ${t}</span>`).join('')}</div></td>
       <td class="r pts-cell">${pts}</td>
-      <td class="r gd-cell">${gd>0?'+':''}${isNaN(gd)?0:gd}</td>`;
+      <td class="r gd-cell" style="color:${gd>0?'var(--green)':gd<0?'#e53e3e':'var(--text-muted)'}">${gd>0?'+':''}${isNaN(gd)?0:gd}</td>
+      <td class="r mp-cell">${mp}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -922,7 +913,7 @@ function getFixtureScore(t1, t2) {
   return state.fixtureScores[k1+'|'+k2] || state.fixtureScores[k2+'|'+k1] || null;
 }
 
-let fixtureSort = 'group'; // 'group' | 'matchday'
+let fixtureSort = 'matchday'; // 'group' | 'matchday'
 
 function setFixtureSort(mode) {
   fixtureSort = mode;
