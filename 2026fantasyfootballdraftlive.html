@@ -52,6 +52,7 @@
   .rank-3{background:var(--bronze);color:var(--bronze-dark);}
   .rank-n{background:var(--surface2);color:var(--text-muted);}
   .manager-name{font-weight:500;font-size:15px;}
+  .manager-teams-mobile{display:none;}
   .pts-cell{font-weight:500;font-size:18px;color:var(--green);font-family:'Bebas Neue',sans-serif;letter-spacing:0.5px;}
   .gd-cell{font-size:13px;color:var(--text-muted);}
   .team-chips{display:flex;flex-wrap:wrap;gap:4px;}
@@ -167,11 +168,16 @@
     .stat-val { font-size:22px; }
     .stat-sub { font-size:11px; }
 
-    /* Leaderboard — hide GD col, compress padding */
-    .lb-table th, .lb-table td { padding:9px 8px; }
-    .lb-table th:last-child, .lb-table td:last-child { display:none; }
+    /* Leaderboard — restructure for mobile */
+    .lb-table th:nth-child(3), .lb-table td:nth-child(3) { display:none; } /* hide Teams col */
+    .lb-table th, .lb-table td { padding:8px 6px; }
+    .lb-table th:nth-child(1), .lb-table td:nth-child(1) { width:32px; padding-left:8px; }
+    .lb-table th:nth-child(4), .lb-table td:nth-child(4) { width:44px; } /* Pts */
+    .lb-table th:nth-child(5), .lb-table td:nth-child(5) { width:38px; padding-right:8px; } /* GD */
     .manager-name { font-size:13px; }
+    .manager-teams-mobile { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
     .pts-cell { font-size:16px; }
+    .gd-cell { font-size:12px; }
     .chip { font-size:10px; padding:2px 5px; }
 
     /* Actions bar */
@@ -567,7 +573,10 @@ function renderLeaderboard() {
     const rank=i+1, pts=mgrPts(m), gd=mgrGD(m);
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><span class="rank-badge ${rank<=3?'rank-'+rank:'rank-n'}">${rank}</span></td>
-      <td><span class="manager-name">${m.name}</span></td>
+      <td>
+        <span class="manager-name">${m.name}</span>
+        <div class="manager-teams-mobile">${m.teams.map(t=>`<span class="chip ${state.teams[t]?.alive?'alive':'eliminated'}">${FLAGS[t]||''} ${t}</span>`).join('')}</div>
+      </td>
       <td><div class="team-chips">${m.teams.map(t=>`<span class="chip ${state.teams[t]?.alive?'alive':'eliminated'}">${FLAGS[t]||''} ${t}</span>`).join('')}</div></td>
       <td class="r pts-cell">${pts}</td>
       <td class="r gd-cell">${gd>0?'+':''}${isNaN(gd)?0:gd}</td>`;
