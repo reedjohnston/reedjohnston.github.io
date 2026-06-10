@@ -226,7 +226,22 @@
   .rule-pill-pts{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);letter-spacing:0.5px;line-height:1;}
   .rule-pill.hl .rule-pill-pts{color:var(--green-dark);}
   .rule-note{background:#0a1a10;color:rgba(255,255,255,0.7);border-radius:var(--radius);padding:12px 16px;font-size:13px;border-left:3px solid var(--green);margin-top:1rem;}
-  .rule-note strong{color:white;}
+  .rule-note strong{color:white;}  .fixture-odds{display:flex;justify-content:center;gap:6px;padding:3px 10px 6px;flex-wrap:wrap;}
+  .odds-pill{display:flex;flex-direction:column;align-items:center;gap:1px;background:var(--surface2);border:0.5px solid var(--border-strong);border-radius:7px;padding:3px 8px;min-width:52px;}
+  .odds-pill-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;}
+  .odds-pill-val{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
+  .odds-pill.fav{background:var(--green-light);border-color:var(--green-mid);}
+  .odds-pill.fav .odds-pill-val{color:var(--green-dark);}
+  /* HISTORY */
+  .history-wrap{padding:0.5rem 0;}
+  .history-manager-row{margin-bottom:2.5rem;}
+  .history-manager-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:10px;}
+  .history-manager-name .first-letter{font-size:1.1em;line-height:0;vertical-align:baseline;}
+  .history-win-count{font-size:13px;font-weight:500;color:var(--green-dark);background:var(--green-light);padding:2px 10px;border-radius:20px;letter-spacing:0;}
+  .history-trophies{display:flex;flex-wrap:wrap;gap:14px;}
+  .trophy-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .trophy-year{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.5px;color:var(--text-muted);}
+  @media(max-width:600px){.history-trophies{gap:10px;}.trophy-item svg{width:52px!important;height:auto!important;}}
 </style>
 </head>
 <body>
@@ -243,8 +258,9 @@
     <select class="nav-dropdown" id="nav-select" onchange="switchTab(this.value)">
       <option value="leaderboard">⚽ Leaderboard</option>
       <option value="groups">📊 Group Standings</option>
-      <option value="fixtures">📅 Group Matches</option>
-      <option value="knockout">🏆 Knockout Rounds</option>
+      <option value="fixtures">📅 Group Schedule</option>
+      <option value="knockout">⚔️ Knockout Rounds</option>
+      <option value="history">🏆 League History</option>
       <option value="rules">📋 Scoring Rules</option>
     </select>
     <span class="nav-dropdown-arrow">▾</span>
@@ -286,6 +302,7 @@
         <button class="sort-btn" id="sort-by-group" onclick="setFixtureSort('group')">By Group</button>
       </div>
     </div>
+
     <div class="fixtures-grid" id="fixtures-grid"></div>
   </div>
 
@@ -295,6 +312,11 @@
       <button class="save-all-btn" onclick="saveKnockout()">Save &amp; Update Leaderboard</button>
     </div>
     <div id="ko-content"></div>
+  </div>
+
+
+  <div id="tab-history" class="section">
+    <div id="history-content"></div>
   </div>
 
   <div id="tab-rules" class="section">
@@ -553,6 +575,7 @@ function switchTab(id) {
   const sel = document.getElementById('nav-select');
   if(sel) sel.value = id;
   if(id==='leaderboard') renderLeaderboard();
+  if(id==='history') renderHistory();
   if(id==='groups') renderGroups();
   if(id==='knockout') renderKnockout();
   if(id==='fixtures') renderFixtures();
@@ -1146,6 +1169,72 @@ function renderFixtures() {
       grid.appendChild(card);
     });
   }
+}
+
+
+
+// ── LEAGUE HISTORY ────────────────────────────────────────────────────────────
+const LEAGUE_HISTORY = [
+  { name: 'Dan',   years: [2018, 2019, 2021, 2023, 2024] },
+  { name: 'Jason', years: [2017, 2022, 2025] },
+  { name: 'Reed',  years: [2008, 2010, 2020] },
+  { name: 'Ray',   years: [2015] },
+  { name: 'Keo',   years: [2013] },
+];
+
+function trophySVG(year, size=64) {
+  const gold = '#EF9F27';
+  const goldDark = '#BA7517';
+  const goldLight = '#FAC775';
+  const shine = '#FAEEDA';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trophy ${year}">
+    <title>Trophy ${year}</title>
+    <!-- Cup body -->
+    <ellipse cx="32" cy="18" rx="18" ry="6" fill="${goldLight}"/>
+    <path d="M14 18 Q11 34 20 42 Q26 47 32 48 Q38 47 44 42 Q53 34 50 18 Z" fill="${gold}"/>
+    <!-- Cup shine -->
+    <path d="M19 22 Q18 32 22 38" stroke="${shine}" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- Handles -->
+    <path d="M14 20 Q6 22 7 32 Q8 38 14 38" stroke="${goldDark}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M50 20 Q58 22 57 32 Q56 38 50 38" stroke="${goldDark}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Lid/lip -->
+    <rect x="13" y="15" width="38" height="5" rx="2.5" fill="${goldLight}"/>
+    <!-- Stem -->
+    <rect x="28" y="48" width="8" height="10" rx="1" fill="${goldDark}"/>
+    <!-- Base -->
+    <rect x="20" y="57" width="24" height="5" rx="2.5" fill="${goldDark}"/>
+    <rect x="18" y="61" width="28" height="4" rx="2" fill="${gold}"/>
+    <!-- Star on cup -->
+    <text x="32" y="37" text-anchor="middle" font-size="12" fill="${shine}" font-family="serif" opacity="0.85">★</text>
+  </svg>`;
+}
+
+function renderHistory() {
+  const wrap = document.getElementById('history-content');
+  if (!wrap) return;
+
+  let html = '<div class="history-wrap">';
+
+  LEAGUE_HISTORY.forEach(mgr => {
+    const first = mgr.name[0];
+    const rest  = mgr.name.slice(1);
+    html += `<div class="history-manager-row">
+      <div class="history-manager-name">
+        <span><span class="first-letter">${first}</span>${rest}</span>
+        <span class="history-win-count">${mgr.years.length} ${mgr.years.length === 1 ? 'title' : 'titles'}</span>
+      </div>
+      <div class="history-trophies">
+        ${mgr.years.map(y => `
+          <div class="trophy-item">
+            ${trophySVG(y, 64)}
+            <div class="trophy-year">${y}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  wrap.innerHTML = html;
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
