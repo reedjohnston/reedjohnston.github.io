@@ -587,6 +587,25 @@
     .header-right{gap:8px;}
     .identity-picker{font-size:12px;padding:6px 24px 6px 10px;}
   }
+
+  /* LEADERBOARD EXPAND ROW */
+  .lb-expand-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:2px 4px;border-radius:4px;transition:color 0.14s,transform 0.2s;line-height:1;vertical-align:middle;margin-left:4px;}
+  .lb-expand-btn:hover{color:var(--gold);}
+  .lb-expand-btn.open{transform:rotate(90deg);color:var(--gold);}
+  .lb-detail-row{display:none;}
+  .lb-detail-row.open{display:table-row;}
+  .lb-detail-cell{padding:0 8px 10px 8px !important;border-bottom:0.5px solid var(--border) !important;background:var(--surface2);}
+  .lb-team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;padding:8px 6px 2px;}
+  .lb-team-card{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;transition:box-shadow 0.14s;}
+  .lb-team-card:hover{box-shadow:0 0 0 1px var(--gold),0 0 12px var(--gold-glow);}
+  .lb-team-card.eliminated-card{opacity:0.45;}
+  .lb-team-name{display:flex;align-items:center;gap:6px;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;color:var(--text);}
+  .lb-team-stats{display:flex;gap:10px;margin-top:2px;}
+  .lb-team-stat{display:flex;flex-direction:column;align-items:center;gap:1px;}
+  .lb-team-stat-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--gold);line-height:1;}
+  .lb-team-stat-lbl{font-size:9px;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;}
+  .lb-team-record{font-size:10px;color:var(--text-muted);margin-top:2px;}
+  @media(max-width:600px){.lb-team-grid{grid-template-columns:1fr 1fr;gap:5px;}}
 </style>
 </head>
 <body>
@@ -1273,10 +1292,12 @@ function renderLeaderboard() {
   sorted.forEach((m,i)=>{
     const rank=i+1, pts=mgrPts(m), gd=mgrGD(m);
     const mp=m.teams.reduce((s,t)=>{ const d=state.teams[t]; return s+(d?(d.w+d.d+d.l):0)+teamKOPlayed(t); },0);
+    const rowId = 'lbx-' + m.name.replace(/\s/g,'_');
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><span class="rank-badge ${rank<=3?'rank-'+rank:'rank-n'}">${rank}</span>${rankMoveHTML(m.name)}</td>
       <td>
         <span class="manager-name clickable" onclick="openManagerModal('${m.name.replace(/'/g,"\\'")}')"><span class="first-letter">${m.name[0]}</span>${m.name.slice(1)}</span>${m.name===MY_MANAGER?'<span class="you-tag">you</span>':''}
+        <button class="lb-expand-btn" id="btn-${rowId}" onclick="toggleLbExpand('${rowId}',event)" title="Show team breakdown">›</button>
         <div class="manager-teams-mobile">${m.teams.map(t=>`<span class="chip clickable ${state.teams[t]?.alive?'alive':'eliminated'}" onclick="openTeamModal('${t.replace(/'/g,"\\'")}')">${flagHTML(t)} ${t}</span>`).join('')}</div>
       </td>
       <td><div class="team-chips">${m.teams.map(t=>`<span class="chip clickable ${state.teams[t]?.alive?'alive':'eliminated'}" onclick="openTeamModal('${t.replace(/'/g,"\\'")}')">${flagHTML(t)} ${t}</span>`).join('')}</div></td>
@@ -1284,7 +1305,41 @@ function renderLeaderboard() {
       <td class="r gd-cell" style="color:${gd>0?'var(--green)':gd<0?'#c53030':'var(--text-muted)'}">${gd>0?'+':''}${isNaN(gd)?0:gd}</td>
       <td class="r mp-cell">${mp}</td>`;
     tbody.appendChild(tr);
+
+    // Team breakdown row (hidden by default)
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'lb-detail-row';
+    detailTr.id = rowId;
+    const teamCards = m.teams.map(t => {
+      const d = state.teams[t] || {};
+      const tp = teamPts(t);
+      const tgd = teamGD(t);
+      const tmp = (d.w||0)+(d.d||0)+(d.l||0)+teamKOPlayed(t);
+      const alive = d.alive !== false;
+      const gdColor = tgd>0?'var(--green)':tgd<0?'#c53030':'var(--text-muted)';
+      return `<div class="lb-team-card ${alive?'':'eliminated-card'}" onclick="openTeamModal('${t.replace(/'/g,"\\'")}')">
+        <div class="lb-team-name">${flagHTML(t)}<span>${t}</span></div>
+        <div class="lb-team-stats">
+          <div class="lb-team-stat"><span class="lb-team-stat-val">${tp}</span><span class="lb-team-stat-lbl">Pts</span></div>
+          <div class="lb-team-stat"><span class="lb-team-stat-val" style="color:${gdColor}">${tgd>0?'+':''}${isNaN(tgd)?0:tgd}</span><span class="lb-team-stat-lbl">GD</span></div>
+          <div class="lb-team-stat"><span class="lb-team-stat-val" style="color:var(--text-muted)">${tmp}</span><span class="lb-team-stat-lbl">MP</span></div>
+        </div>
+        <div class="lb-team-record">${d.w||0}W · ${d.d||0}D · ${d.l||0}L${alive?'':' · out'}</div>
+      </div>`;
+    }).join('');
+    detailTr.innerHTML = `<td class="lb-detail-cell" colspan="6"><div class="lb-team-grid">${teamCards}</div></td>`;
+    tbody.appendChild(detailTr);
   });
+}
+
+function toggleLbExpand(rowId, e) {
+  if (e) e.stopPropagation();
+  const row = document.getElementById(rowId);
+  const btn = document.getElementById('btn-' + rowId);
+  if (!row || !btn) return;
+  const isOpen = row.classList.contains('open');
+  row.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
 }
 
 // ── GROUPS ────────────────────────────────────────────────────────────────────
