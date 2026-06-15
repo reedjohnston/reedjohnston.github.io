@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Cup Fantasy 2026</title>
+<title>World Cup 2026 Fantasy Draft</title>
+
+<!-- Open Graph / Link Preview -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://reedjohnston.github.io/wc2026-fantasy/worldcupfantasydraft2026.html">
+<meta property="og:title" content="⚽ World Cup 2026 Fantasy Draft">
+<meta property="og:description" content="Live leaderboard for our 10-manager World Cup 2026 fantasy league. 4 teams each — tracking group stage results, knockout rounds, and standings in real time.">
+<meta property="og:image" content="https://reedjohnston.github.io/wc2026-fantasy/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="⚽ World Cup 2026 Fantasy Draft">
+<meta name="twitter:description" content="Live leaderboard for our 10-manager World Cup 2026 fantasy league. 4 teams each — tracking group stage results, knockout rounds, and standings in real time.">
+<meta name="twitter:image" content="https://reedjohnston.github.io/wc2026-fantasy/preview.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500&family=Oswald:wght@500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
@@ -1789,6 +1802,35 @@ function syncKnockoutFromApi(allFixtures) {
   });
 }
 
+// ── DAILY RANK BASELINE ──────────────────────────────────────────────────────
+// Snapshot ranks once per calendar day. Arrows show drift from morning baseline,
+// not from previous sync — they only move when a completed match shifts the table.
+const RANK_SNAP_STORE = 'wc2026_ranksnap';
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function loadDailyRankSnap() {
+  try { const r = JSON.parse(localStorage.getItem(RANK_SNAP_STORE)); if (r && r.date === todayStr()) return r.ranks; } catch(e) {}
+  return null;
+}
+function saveDailyRankSnap(ranks) {
+  try { localStorage.setItem(RANK_SNAP_STORE, JSON.stringify({ date: todayStr(), ranks })); } catch(e) {}
+}
+function updateRankMoves(prevFinishedCount, newFinishedCount, prevRanks) {
+  const newRanks = computeRanks();
+  let baseline = loadDailyRankSnap();
+  if (!baseline) {
+    // First sync of the day — snapshot ranks BEFORE this sync's results land
+    baseline = prevRanks;
+    saveDailyRankSnap(baseline);
+  }
+  // Only recalculate arrows when new completed matches came in
+  if (newFinishedCount <= prevFinishedCount) return;
+  state.rankMoves = {};
+  MANAGERS.forEach(m => {
+    const p = baseline[m.name], n = newRanks[m.name];
+    state.rankMoves[m.name] = (p != null && n != null) ? p - n : 0;
+  });
+}
+
 let lastSyncHadLive = false;
 let lastSyncInfo = { time:null, source:null, live:false, error:null };
 let syncInFlight = false; // manual click + auto-refresh timer can overlap; two
@@ -1806,6 +1848,7 @@ async function syncLiveResults() {
 
   const apiKey = loadApiKey();
   const prevRanks = computeRanks();
+  const prevFinishedCount = Object.values(state.fixtureScores || {}).filter(s => s.fin !== false).length;
 
   try {
     let processed = 0;
@@ -1908,13 +1951,8 @@ async function syncLiveResults() {
 
     recalcKOPoints();
 
-    // Rank movement since the previous sync (\u25B2/\u25BC on the leaderboard).
-    const newRanks = computeRanks();
-    state.rankMoves = {};
-    MANAGERS.forEach(m => {
-      const p = prevRanks[m.name], n = newRanks[m.name];
-      state.rankMoves[m.name] = (p != null && n != null) ? p - n : 0;
-    });
+    const newFinishedCount = Object.values(state.fixtureScores || {}).filter(s => s.fin !== false).length;
+    updateRankMoves(prevFinishedCount, newFinishedCount, prevRanks);
 
     persist();
 
