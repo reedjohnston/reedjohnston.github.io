@@ -1726,12 +1726,13 @@ async function fetchFromESPN() {
     const away = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
     const pensH = home.shootoutScore, pensA = away.shootoutScore;
     const hasPens = pensH != null || pensA != null;
+    const clock = stType.detail || stType.shortDetail || ''; // e.g. "45'" or "HT"
     const short = state_ === 'post' ? (hasPens ? 'PEN' : 'FT')
                 : state_ === 'in' ? 'LIVE'
                 : 'NS';
     const isGroup = Date.parse(e.date) < GROUP_STAGE_END_UTC;
     return {
-      fixture: { status: { short } },
+      fixture: { status: { short }, clock },
       league:  { round: isGroup ? 'Group Stage' : 'Knockout' },
       teams:   { home: { name: home.team?.displayName || '' }, away: { name: away.team?.displayName || '' } },
       goals:   { home: parseInt(home.score) || 0, away: parseInt(away.score) || 0 },
@@ -1857,8 +1858,8 @@ function updateRankMoves(prevFinishedCount, newFinishedCount, prevRanks) {
     baseline = prevRanks;
     saveDailyRankSnap(baseline);
   }
-  // Only recalculate arrows when new completed matches came in
-  if (newFinishedCount <= prevFinishedCount) return;
+  // Always recompute moves if we have a baseline — arrows should always reflect today's drift
+  if (!baseline || Object.keys(baseline).length === 0) return;
   state.rankMoves = {};
   MANAGERS.forEach(m => {
     const p = baseline[m.name], n = newRanks[m.name];
