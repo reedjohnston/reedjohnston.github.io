@@ -1202,8 +1202,8 @@ function updateLbStatus() {
 
 function rankMoveHTML(name) {
   const mv = (state.rankMoves || {})[name] || 0;
-  if (mv > 0) return `<span class="rank-move up" title="Up ${mv} since last sync">\u25B2${mv}</span>`;
-  if (mv < 0) return `<span class="rank-move down" title="Down ${-mv} since last sync">\u25BC${-mv}</span>`;
+  if (mv > 0) return `<span class="rank-move up" title="Up ${mv} place${mv>1?'s':''} today">▲${mv}</span>`;
+  if (mv < 0) return `<span class="rank-move down" title="Down ${-mv} place${-mv>1?'s':''} today">▼${-mv}</span>`;
   return '';
 }
 
@@ -1266,12 +1266,11 @@ function renderNextUp() {
   el.innerHTML = `
     <div class="next-up-eyebrow">${eyebrow}</div>
     <div class="next-up-match">
-      <div class="next-up-team t1">${mine1?'<span class="mine-dot"></span>':''}<span>${d.t1n}</span>${flagHTML(d.t1n)}</div>
+      <div class="next-up-team t1">${mine1?'<span class="mine-dot"></span>':''}<span>${d.t1n}</span>${flagHTML(d.t1n)}${OWNER[d.t1n]?`<span class="fixture-owner-tag">${OWNER[d.t1n]}</span>`:''}</div>
       <div class="next-up-mid">${mid}</div>
-      <div class="next-up-team t2">${flagHTML(d.t2n)}<span>${d.t2n}</span>${mine2?'<span class="mine-dot"></span>':''}</div>
+      <div class="next-up-team t2">${OWNER[d.t2n]?`<span class="fixture-owner-tag">${OWNER[d.t2n]}</span>`:''} ${flagHTML(d.t2n)}<span>${d.t2n}</span>${mine2?'<span class="mine-dot"></span>':''}</div>
     </div>
     <div class="next-up-meta">${m.group} · ${m.round}${venue?` · ${venue}`:''}`;
-  // Still dot your own teams if identity is set, but don't filter by them
   if ((mine1 || mine2) && MY_MANAGER) {
     el.innerHTML += ` · <span style="color:var(--green-bright);font-weight:600">${MY_MANAGER}'s team</span>`;
   }
@@ -2798,6 +2797,18 @@ document.addEventListener('click', () => {
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 recalcKOPoints();
+// Restore rank move arrows from today's baseline on load
+(function() {
+  const baseline = loadDailyRankSnap();
+  if (baseline && !state.rankMoves) {
+    const current = computeRanks();
+    state.rankMoves = {};
+    MANAGERS.forEach(m => {
+      const p = baseline[m.name], n = current[m.name];
+      state.rankMoves[m.name] = (p != null && n != null) ? p - n : 0;
+    });
+  }
+})();
 renderLeaderboard();
 updateLbStatus();
 renderNextUp();
