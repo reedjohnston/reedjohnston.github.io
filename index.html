@@ -628,8 +628,8 @@
   <div class="nav-dropdown-wrap">
     <select class="nav-dropdown" id="nav-select" aria-label="App section" onchange="switchTab(this.value)">
       <option value="leaderboard">Leaderboard</option>
-      <option value="groups">Group Standings</option>
       <option value="fixtures">Group Schedule</option>
+      <option value="groups">Group Standings</option>
       <option value="knockout">Knockout Rounds</option>
       <option value="history">League History</option>
       <option value="rules">Scoring Rules</option>
@@ -1226,10 +1226,6 @@ function setIdentity(name) {
   renderLeaderboard();
 }
 
-// "Next up" hero: the single most glanceable thing on a tournament tracker.
-// Priority: a live match (any) → the next upcoming fixture involving YOUR teams
-// → the next fixture overall. Hidden once the group stage is over (knockout
-// fixtures aren't in GROUP_FIXTURES).
 function renderNextUp() {
   const el = document.getElementById('next-up');
   if (!el) return;
@@ -1242,33 +1238,25 @@ function renderNextUp() {
     return { m, d, kms: parseKickoffMs(m.date, m.time) };
   });
 
-  // 1. Live: kickoff passed, no final score yet, within a 3h window.
+  // 1. Live: kickoff passed, within a 3h window, no final score yet
   const live = enriched
-    .filter(x => x.kms && now >= x.kms && now <= x.kms + 3*60*60*1000 && !x.d.hasScore)
+    .filter(x => x.kms && now >= x.kms && now <= x.kms + 3*60*60*1000 && !x.d.isFinal)
     .sort((a,b) => a.kms - b.kms)[0];
 
-  // 2. Next fixture involving a Brandon team that hasn't kicked off.
-  const myNext = enriched
-    .filter(x => x.kms && x.kms > now && (mine.has(x.d.t1n) || mine.has(x.d.t2n)))
-    .sort((a,b) => a.kms - b.kms)[0];
-
-  // 3. Next fixture overall.
+  // 2. Always show next upcoming fixture overall (not filtered by identity)
   const anyNext = enriched
     .filter(x => x.kms && x.kms > now)
     .sort((a,b) => a.kms - b.kms)[0];
 
-  const pick = live || myNext || anyNext;
+  const pick = live || anyNext;
   if (!pick) { el.className = 'next-up'; el.innerHTML = ''; return; }
 
   const { m, d } = pick;
   const isLive = !!live;
   const mine1 = mine.has(d.t1n), mine2 = mine.has(d.t2n);
-  const involvesMe = mine1 || mine2;
 
   const dateFmt = new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
-  const eyebrow = isLive
-    ? `<span class="live-pip"></span> Live now`
-    : involvesMe ? `Your next match` : `Next kickoff`;
+  const eyebrow = isLive ? `<span class="live-pip"></span> Live now` : `Next match`;
   const mid = isLive
     ? `<div class="next-up-score">${d.hasScore ? d.s1+'–'+d.s2 : 'LIVE'}</div><div class="next-up-kick">in progress</div>`
     : `<div class="next-up-kick">${dateFmt}<br>${d.kickoff}</div>`;
@@ -1282,7 +1270,12 @@ function renderNextUp() {
       <div class="next-up-mid">${mid}</div>
       <div class="next-up-team t2">${flagHTML(d.t2n)}<span>${d.t2n}</span>${mine2?'<span class="mine-dot"></span>':''}</div>
     </div>
-    <div class="next-up-meta">${m.group} · ${m.round}${venue?` · ${venue}`:''}${involvesMe && !isLive ? ` · your team` : ''}</div>`;
+    <div class="next-up-meta">${m.group} · ${m.round}${venue?` · ${venue}`:''}`;
+  // Still dot your own teams if identity is set, but don't filter by them
+  if ((mine1 || mine2) && MY_MANAGER) {
+    el.innerHTML += ` · <span style="color:var(--green-bright);font-weight:600">${MY_MANAGER}'s team</span>`;
+  }
+  el.innerHTML += `</div>`;
 }
 
 function renderLeaderboard() {
@@ -1352,9 +1345,7 @@ let editModeTouchedAt = 0;
 
 function renderGroups() {
   const grid=document.getElementById('groups-grid'); grid.innerHTML='';
-  const synced = !!loadApiKey();
   GROUPS.forEach(g=>{
-    const editing = !synced || manualEditGroups.has(g.letter);
     const ranked=getGroupRanking(g.letter);
     const card=document.createElement('div'); card.className='group-card';
     card.innerHTML=`
@@ -1367,27 +1358,17 @@ function renderGroups() {
         <tbody>${ranked.map(t=>{
           const d=state.teams[t]||defaultTeam(),isFT=FANTASY_TEAMS.has(t),owner=OWNER[t]||'';
           const gd=d.gd??0;
-          const cells = editing ? `
-            <td class="r"><input class="w-input" type="number" min="0" id="w_${tk(t)}" value="${d.w}" aria-label="${t} wins" oninput="liveGrp('${tk(t)}','${t}')"></td>
-            <td class="r"><input class="w-input" type="number" min="0" id="d_${tk(t)}" value="${d.d}" aria-label="${t} draws" oninput="liveGrp('${tk(t)}','${t}')"></td>
-            <td class="r"><input class="w-input" type="number" min="0" id="l_${tk(t)}" value="${d.l}" aria-label="${t} losses" oninput="liveGrp('${tk(t)}','${t}')"></td>
-            <td class="r"><input class="w-input gd-input" type="number" id="gd_${tk(t)}" value="${gd}" aria-label="${t} goal difference" oninput="liveGrp('${tk(t)}','${t}')"></td>`
-          : `
+          return `<tr class="${isFT?'fantasy-team':''}">
+            <td><div class="team-name-cell"><span class="team-flag">${flagHTML(t)}</span>${t}${isFT?`<span class="owner-tag">${owner}</span>`:''}</div></td>
             <td class="r">${d.w}</td>
             <td class="r">${d.d}</td>
             <td class="r">${d.l}</td>
-            <td class="r" style="color:${gd>0?'var(--green-dark)':gd<0?'#c53030':'var(--text-muted)'}">${gd>0?'+':''}${gd}</td>`;
-          return `<tr class="${isFT?'fantasy-team':''}">
-            <td><div class="team-name-cell"><span class="team-flag">${flagHTML(t)}</span>${t}${isFT?`<span class="owner-tag">${owner}</span>`:''}</div></td>
-            ${cells}
-            <td class="r" id="pts_${tk(t)}" style="font-weight:500">${groupPts(t)}</td>
-            <td class="r"><input type="checkbox" ${d.alive?'checked':''} id="alive_${tk(t)}" aria-label="${t} still in tournament" onchange="toggleAliveG('${tk(t)}','${t}')"></td>
+            <td class="r" style="color:${gd>0?'var(--green-dark)':gd<0?'#c53030':'var(--text-muted)'}">${gd>0?'+':''}${gd}</td>
+            <td class="r" style="font-weight:600">${groupPts(t)}</td>
+            <td class="r">${d.alive!==false?'✓':'<span style="opacity:0.4">✗</span>'}</td>
           </tr>`;
         }).join('')}</tbody>
-      </table>
-      <div class="group-actions">${editing
-        ? `<button class="mini-save-btn" onclick="saveGroup('${g.letter}')">Save Group ${g.letter}</button>`
-        : `<button class="mini-save-btn ghost" onclick="editGroup('${g.letter}')" title="Switch to manual entry (pauses auto-sync)">✎ Edit</button>`}</div>`;
+      </table>`;
     grid.appendChild(card);
   });
 }
